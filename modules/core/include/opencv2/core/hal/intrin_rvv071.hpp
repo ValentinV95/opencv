@@ -20,6 +20,13 @@ CV_CPU_OPTIMIZATION_HAL_NAMESPACE_BEGIN
 
 #define CV_SIMD128 1
 #define CV_SIMD128_64F 0
+
+#ifndef __thead_c906
+#define CV_SIMD128_64i 1
+#else
+#define CV_SIMD128_64i 0
+#endif
+
 //////////// Types ////////////
 struct v_uint8x16
 {
@@ -903,10 +910,21 @@ inline scalartype v_reduce_##func(const v_##_Tpvec##x##num& a) \
 }
 OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_W(int8, int16, i16, int, sum, vwredsum_vs_i8m1_i16m1, 16)
 OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_W(int16, int32, i32, int, sum, vwredsum_vs_i16m1_i32m1, 8)
+#if CV_SIMD128_64i
 OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_W(int32, int64, i64, int, sum, vwredsum_vs_i32m1_i64m1, 4)
+#else
+OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_W(int32, int32, i32, int, sum, vredsum_vs_i32m1_i32m1, 4)
+#endif
 OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_W(uint8, uint16, u16, unsigned, sum, vwredsumu_vs_u8m1_u16m1, 16)
 OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_W(uint16, uint32, u32, unsigned, sum, vwredsumu_vs_u16m1_u32m1, 8)
+#if CV_SIMD128_64i
 OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_W(uint32, uint64, u64, unsigned, sum, vwredsumu_vs_u32m1_u64m1, 4)
+#else
+inline unsigned v_reduce_sum(const v_uint32x4& a) \
+{ return vext_x_v_u32m1_u32((vuint32m1_t)a.val, 0, 4)+vext_x_v_u32m1_u32((vuint32m1_t)a.val, 1, 4) + \
+    vext_x_v_u32m1_u32((vuint32m1_t)a.val, 2, 4)+vext_x_v_u32m1_u32((vuint32m1_t)a.val, 3, 4); \
+}
+#endif
 inline float v_reduce_sum(const v_float32x4& a) \
 {\
     vfloat32m1_t val = vfmv_v_f_f32m1(0.0, 4); \
