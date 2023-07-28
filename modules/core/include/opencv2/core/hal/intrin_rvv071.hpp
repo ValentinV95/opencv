@@ -171,6 +171,7 @@ struct v_float32x4
     vfloat32m1_t val;
 };
 
+#if CV_SIMD_ELEM64
 struct v_uint64x2
 {
     typedef uint64 lane_type;
@@ -227,6 +228,63 @@ struct v_float64x2
     }
     vfloat64m1_t val;
 };
+#else
+struct v_uint64x2
+{
+    typedef uint64 lane_type;
+    enum { nlanes = 2 };
+
+    v_uint64x2() {}
+    //    explicit v_uint64x2(vuint64m1_t v) : val(v) {}
+    v_uint64x2(uint64 v0, uint64 v1)
+    {
+        val[0] = v0;
+        val[1] = v1;
+    }
+    uint64 get0() const
+    {
+        //        return vmv_x_s_u64m1_u64(val, 2);
+        return val[0];
+    }
+    uint64 val[2] = { 0 };
+};
+
+struct v_int64x2
+{
+    typedef int64 lane_type;
+    enum { nlanes = 2 };
+
+    v_int64x2() {}
+    v_int64x2(int64 v0, int64 v1)
+    {
+        val[0] = v0;
+        val[1] = v1;
+    }
+    int64 get0() const
+    {
+        return val[0];
+    }
+    int64 val[2] = { 0 };
+};
+
+struct v_float64x2
+{
+    typedef double lane_type;
+    enum { nlanes = 2 };
+
+    v_float64x2() {}
+    v_float64x2(double v0, double v1)
+    {
+        val[0] = v0;
+        val[1] = v1;
+    }
+    double get0() const
+    {
+        return val[0];
+    }
+    double val[2] = {0};
+};
+#endif
 
 //////////// Types 512B ////////////
 struct v_uint8x64
@@ -422,6 +480,7 @@ struct v_float32x16
     vfloat32m4_t val;
 };
 
+#if CV_SIMD_ELEM64
 struct v_uint64x8
 {
     typedef uint64 lane_type;
@@ -478,6 +537,65 @@ struct v_float64x8
     }
     vfloat64m4_t val;
 };
+#else
+struct v_uint64x8
+{
+    typedef uint64 lane_type;
+    enum { nlanes = 8 };
+
+    v_uint64x8() {}
+    v_uint64x8(uint64 v0, uint64 v1, uint64 v2, uint64 v3,
+               uint64 v4, uint64 v5, uint64 v6, uint64 v7)
+    {
+        uint64 v[] = { v0, v1, v2, v3, v4, v5, v6, v7 };
+        for(int i =0; i <8; i++) val[i] = v[i];
+    }
+    uint64 get0() const
+    {
+        return val[0];
+    }
+    uint64 val[8];
+};
+
+struct v_int64x8
+{
+    typedef int64 lane_type;
+    enum { nlanes = 8 };
+
+    v_int64x8() {}
+//    explicit v_int64x8(vint64m4_t v) : val(v) {}
+    v_int64x8(int64 v0, int64 v1, int64 v2, int64 v3,
+              int64 v4, int64 v5, int64 v6, int64 v7)
+    {
+        int64 v[] = { v0, v1, v2, v3, v4, v5, v6, v7 };
+        for (int i = 0; i < 8; i++) val[i] = v[i];
+    }
+    int64 get0() const
+    {
+        return val[0];
+    }
+    int64 val[8];
+};
+
+struct v_float64x8
+{
+    typedef double lane_type;
+    enum { nlanes = 8 };
+
+    v_float64x8() {}
+    v_float64x8(double v0, double v1, double v2, double v3, double v4,
+                double v5, double v6, double v7)
+    {
+        double v[] = { v0, v1, v2, v3, v4, v5, v6, v7 };
+        for (int i = 0; i < 8; i++) val[i] = v[i];
+    }
+    double get0() const
+    {
+        return val[0];
+    }
+    double val[8];
+};
+#endif
 
 #define OPENCV_HAL_IMPL_RISCVV_GETSET(_Tp, _T) \
 inline _Tp##m2_t vget_##_T##m4_##_T##m2(_Tp##m4_t v, const int32_t index) \
