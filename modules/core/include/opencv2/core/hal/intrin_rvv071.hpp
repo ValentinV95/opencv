@@ -235,6 +235,8 @@ struct v_uint64x2
     enum { nlanes = 2 };
 
     v_uint64x2() {}
+    v_uint64x2(uint64 v[]){ for (int i = 0; i < 2; i++) val[i] = v[i];}
+    v_uint64x2(uint64 v, int len) { for (int i = 0; i < len; i++) val[i] = v; }
     //    explicit v_uint64x2(vuint64m1_t v) : val(v) {}
     v_uint64x2(uint64 v0, uint64 v1)
     {
@@ -246,7 +248,7 @@ struct v_uint64x2
         //        return vmv_x_s_u64m1_u64(val, 2);
         return val[0];
     }
-    uint64 val[2] = { 0 };
+    uint64 val[2];
 };
 
 struct v_int64x2
@@ -255,6 +257,8 @@ struct v_int64x2
     enum { nlanes = 2 };
 
     v_int64x2() {}
+    v_int64x2(int64 v[]) { for (int i = 0; i < 2; i++) val[i] = v[i]; }
+    v_int64x2(int64 v, int len) { for (int i = 0; i < len; i++) val[i] = v; }
     v_int64x2(int64 v0, int64 v1)
     {
         val[0] = v0;
@@ -264,7 +268,7 @@ struct v_int64x2
     {
         return val[0];
     }
-    int64 val[2] = { 0 };
+    int64 val[2];
 };
 
 struct v_float64x2
@@ -273,6 +277,8 @@ struct v_float64x2
     enum { nlanes = 2 };
 
     v_float64x2() {}
+    v_float64x2(double v[]) { for (int i = 0; i < 2; i++) val[i] = v[i]; }
+    v_float64x2(double v, int len) { for (int i = 0; i < len; i++) val[i] = v; }
     v_float64x2(double v0, double v1)
     {
         val[0] = v0;
@@ -282,7 +288,7 @@ struct v_float64x2
     {
         return val[0];
     }
-    double val[2] = {0};
+    double val[2];
 };
 #endif
 
@@ -544,6 +550,9 @@ struct v_uint64x8
     enum { nlanes = 8 };
 
     v_uint64x8() {}
+    v_uint64x8(uint64 v[]) { for (int i = 0; i < 8; i++) val[i] = v[i]; }
+    v_uint64x8(uint64 v, int len) { for (int i = 0; i < len; i++) val[i] = v; }
+
     v_uint64x8(uint64 v0, uint64 v1, uint64 v2, uint64 v3,
                uint64 v4, uint64 v5, uint64 v6, uint64 v7)
     {
@@ -563,7 +572,8 @@ struct v_int64x8
     enum { nlanes = 8 };
 
     v_int64x8() {}
-//    explicit v_int64x8(vint64m4_t v) : val(v) {}
+    v_int64x8(int64 v[]) { for (int i = 0; i < 8; i++) val[i] = v[i]; }
+    v_int64x8(int64 v, int len) { for (int i = 0; i < len; i++) val[i] = v; }
     v_int64x8(int64 v0, int64 v1, int64 v2, int64 v3,
               int64 v4, int64 v5, int64 v6, int64 v7)
     {
@@ -583,6 +593,8 @@ struct v_float64x8
     enum { nlanes = 8 };
 
     v_float64x8() {}
+    v_float64x8(double v[]) { for (int i = 0; i < 8; i++) val[i] = v[i]; }
+    v_float64x8(double v, int len) { for (int i = 0; i < len; i++) val[i] = v; }
     v_float64x8(double v0, double v1, double v2, double v3, double v4,
                 double v5, double v6, double v7)
     {
@@ -643,12 +655,16 @@ OPENCV_HAL_IMPL_RISCVV_GETSET(vuint16,  u16)
 OPENCV_HAL_IMPL_RISCVV_GETSET(vint16,   i16)
 OPENCV_HAL_IMPL_RISCVV_GETSET(vuint32,  u32)
 OPENCV_HAL_IMPL_RISCVV_GETSET(vint32,   i32)
-OPENCV_HAL_IMPL_RISCVV_GETSET(vuint64,  u64)
-OPENCV_HAL_IMPL_RISCVV_GETSET(vint64,   i64)
 OPENCV_HAL_IMPL_RISCVV_GETSET(vfloat32, f32)
+
+#if CV_SIMD_ELEM64
 OPENCV_HAL_IMPL_RISCVV_GETSET(vfloat64, f64)
+OPENCV_HAL_IMPL_RISCVV_GETSET(vuint64, u64)
+OPENCV_HAL_IMPL_RISCVV_GETSET(vint64, i64)
+#endif
 
 
+#if CV_SIMD_ELEM64
 #define OPENCV_HAL_IMPL_RISCVV_INIT(_Tpv, _Tp, suffix) \
 inline _Tp##m1_t vreinterpretq_##suffix##_##suffix(_Tp##m1_t v) { return v; } \
 inline v_uint8x16 v_reinterpret_as_u8(const v_##_Tpv& v) { return v_uint8x16((vuint8m1_t)(v.val)); } \
@@ -698,9 +714,52 @@ OPENCV_HAL_IMPL_RISCVV_INIT_512(int64x8, vint64, s64)
 OPENCV_HAL_IMPL_RISCVV_INIT_512(float64x8, vfloat64, f64)
 OPENCV_HAL_IMPL_RISCVV_INIT_512(float32x16, vfloat32, f32)
 
+#else
+#define OPENCV_HAL_IMPL_RISCVV_INIT(_Tpv, _Tp, suffix) \
+inline _Tp##m1_t vreinterpretq_##suffix##_##suffix(_Tp##m1_t v) { return v; } \
+inline v_uint8x16 v_reinterpret_as_u8(const v_##_Tpv& v) { return v_uint8x16((vuint8m1_t)(v.val)); } \
+inline v_int8x16 v_reinterpret_as_s8(const v_##_Tpv& v) { return v_int8x16((vint8m1_t)(v.val)); } \
+inline v_uint16x8 v_reinterpret_as_u16(const v_##_Tpv& v) { return v_uint16x8((vuint16m1_t)(v.val)); } \
+inline v_int16x8 v_reinterpret_as_s16(const v_##_Tpv& v) { return v_int16x8((vint16m1_t)(v.val)); } \
+inline v_uint32x4 v_reinterpret_as_u32(const v_##_Tpv& v) { return v_uint32x4((vuint32m1_t)(v.val)); } \
+inline v_int32x4 v_reinterpret_as_s32(const v_##_Tpv& v) { return v_int32x4((vint32m1_t)(v.val)); } \
+inline v_float32x4 v_reinterpret_as_f32(const v_##_Tpv& v) { return v_float32x4((vfloat32m1_t)(v.val)); }
+
+#define OPENCV_HAL_IMPL_RISCVV_INIT_512(_Tpv, _Tp, suffix) \
+inline _Tp##m4_t vreinterpretq_##suffix##_##suffix(_Tp##m4_t v) { return v; } \
+inline v_uint8x64 v_reinterpret_as_u8(const v_##_Tpv& v) { return v_uint8x64((vuint8m4_t)(v.val)); } \
+inline v_int8x64 v_reinterpret_as_s8(const v_##_Tpv& v) { return v_int8x64((vint8m4_t)(v.val)); } \
+inline v_uint16x32 v_reinterpret_as_u16(const v_##_Tpv& v) { return v_uint16x32((vuint16m4_t)(v.val)); } \
+inline v_int16x32 v_reinterpret_as_s16(const v_##_Tpv& v) { return v_int16x32((vint16m4_t)(v.val)); } \
+inline v_uint32x16 v_reinterpret_as_u32(const v_##_Tpv& v) { return v_uint32x16((vuint32m4_t)(v.val)); } \
+inline v_int32x16 v_reinterpret_as_s32(const v_##_Tpv& v) { return v_int32x16((vint32m4_t)(v.val)); } \
+inline v_float32x16 v_reinterpret_as_f32(const v_##_Tpv& v) { return v_float32x16((vfloat32m4_t)(v.val)); }
+
+OPENCV_HAL_IMPL_RISCVV_INIT(uint8x16, vuint8, u8)
+OPENCV_HAL_IMPL_RISCVV_INIT(int8x16, vint8, s8)
+OPENCV_HAL_IMPL_RISCVV_INIT(uint16x8, vuint16, u16)
+OPENCV_HAL_IMPL_RISCVV_INIT(int16x8, vint16, s16)
+OPENCV_HAL_IMPL_RISCVV_INIT(uint32x4, vuint32, u32)
+OPENCV_HAL_IMPL_RISCVV_INIT(int32x4, vint32, s32)
+OPENCV_HAL_IMPL_RISCVV_INIT(float32x4, vfloat32, f32)
+
+OPENCV_HAL_IMPL_RISCVV_INIT_512(uint8x64, vuint8, u8)
+OPENCV_HAL_IMPL_RISCVV_INIT_512(int8x64, vint8, s8)
+OPENCV_HAL_IMPL_RISCVV_INIT_512(uint16x32, vuint16, u16)
+OPENCV_HAL_IMPL_RISCVV_INIT_512(int16x32, vint16, s16)
+OPENCV_HAL_IMPL_RISCVV_INIT_512(uint32x16, vuint32, u32)
+OPENCV_HAL_IMPL_RISCVV_INIT_512(int32x16, vint32, s32)
+OPENCV_HAL_IMPL_RISCVV_INIT_512(float32x16, vfloat32, f32)
+#endif
+
+
 #define OPENCV_HAL_IMPL_RISCVV_INIT_SET(__Tp, _Tp, suffix, len, num) \
 inline v_##_Tp##x##num v_setzero_##suffix() { return v_##_Tp##x##num((v##_Tp##m1_t){0}); }     \
 inline v_##_Tp##x##num v_setall_##suffix(__Tp v) { return v_##_Tp##x##num(vmv_v_x_##len##m1(v, num)); }
+
+#define OPENCV_HAL_IMPL_RISCVV_INIT_SET_X64(__Tp, _Tp, suffix, len, num) \
+inline v_##_Tp##x##num v_setzero_##suffix() { return v_##_Tp##x##num(0, num); }     \
+inline v_##_Tp##x##num v_setall_##suffix(__Tp v) { return v_##_Tp##x##num(v, num); }
 
 OPENCV_HAL_IMPL_RISCVV_INIT_SET(uchar, uint8, u8, u8, 16)
 OPENCV_HAL_IMPL_RISCVV_INIT_SET(char, int8, s8, i8, 16)
@@ -708,17 +767,30 @@ OPENCV_HAL_IMPL_RISCVV_INIT_SET(ushort, uint16, u16, u16, 8)
 OPENCV_HAL_IMPL_RISCVV_INIT_SET(short, int16, s16, i16, 8)
 OPENCV_HAL_IMPL_RISCVV_INIT_SET(unsigned int, uint32, u32, u32, 4)
 OPENCV_HAL_IMPL_RISCVV_INIT_SET(int, int32, s32, i32, 4)
+#if CV_SIMD_ELEM64
 OPENCV_HAL_IMPL_RISCVV_INIT_SET(unsigned long, uint64, u64, u64, 2)
 OPENCV_HAL_IMPL_RISCVV_INIT_SET(long, int64, s64, i64, 2)
+#else
+OPENCV_HAL_IMPL_RISCVV_INIT_SET_X64(unsigned long, uint64, u64, u64, 2)
+OPENCV_HAL_IMPL_RISCVV_INIT_SET_X64(long, int64, s64, i64, 2)
+OPENCV_HAL_IMPL_RISCVV_INIT_SET_X64(double, float64, f64, f64, 2)
+#endif
+
 inline v_float32x4 v_setzero_f32() { return v_float32x4((vfloat32m1_t){0}); }
 inline v_float32x4 v_setall_f32(float v) { return v_float32x4(vfmv_v_f_f32m1(v, 4)); }
 
+#if CV_SIMD_ELEM64
 inline v_float64x2 v_setzero_f64() { return v_float64x2(vfmv_v_f_f64m1(0, 2)); }
 inline v_float64x2 v_setall_f64(double v) { return v_float64x2(vfmv_v_f_f64m1(v, 2)); }
+#endif
 
 #define OPENCV_HAL_IMPL_RISCVV_INIT_SET_512(__Tp, _Tp, suffix, len, num) \
 inline v_##_Tp##x##num v512_setzero_##suffix() { return v_##_Tp##x##num((v##_Tp##m4_t){0}); }     \
 inline v_##_Tp##x##num v512_setall_##suffix(__Tp v) { return v_##_Tp##x##num(vmv_v_x_##len##m4(v, num)); }
+
+#define OPENCV_HAL_IMPL_RISCVV_INIT_SET_512_X64(__Tp, _Tp, suffix, len, num) \
+inline v_##_Tp##x##num v512_setzero_##suffix() { return v_##_Tp##x##num( 0, num); }     \
+inline v_##_Tp##x##num v512_setall_##suffix(__Tp v) { return v_##_Tp##x##num(v, num); }
 
 OPENCV_HAL_IMPL_RISCVV_INIT_SET_512(uchar, uint8, u8, u8, 64)
 OPENCV_HAL_IMPL_RISCVV_INIT_SET_512(char, int8, s8, i8, 64)
@@ -726,15 +798,22 @@ OPENCV_HAL_IMPL_RISCVV_INIT_SET_512(ushort, uint16, u16, u16, 32)
 OPENCV_HAL_IMPL_RISCVV_INIT_SET_512(short, int16, s16, i16, 32)
 OPENCV_HAL_IMPL_RISCVV_INIT_SET_512(unsigned int, uint32, u32, u32, 16)
 OPENCV_HAL_IMPL_RISCVV_INIT_SET_512(int, int32, s32, i32, 16)
+#if CV_SIMD_ELEM64
 OPENCV_HAL_IMPL_RISCVV_INIT_SET_512(unsigned long, uint64, u64, u64, 8)
 OPENCV_HAL_IMPL_RISCVV_INIT_SET_512(long, int64, s64, i64, 8)
+#else
+OPENCV_HAL_IMPL_RISCVV_INIT_SET_512_X64(unsigned long, uint64, u64, u64, 8)
+OPENCV_HAL_IMPL_RISCVV_INIT_SET_512_X64(long, int64, s64, i64, 8)
+OPENCV_HAL_IMPL_RISCVV_INIT_SET_512_X64(double, float64, f64, f64, 8)
+#endif
 
 inline v_float32x16 v512_setall_f32(float v) { return v_float32x16(vfmv_v_f_f32m4(v, 16)); }
 inline v_float32x16 v512_setzero_f32() { return v_float32x16((vfloat32m4_t){0}); }
 
+#if CV_SIMD_ELEM64
 inline v_float64x8 v512_setzero_f64() { return v_float64x8(vfmv_v_f_f64m4(0, 8)); }
 inline v_float64x8 v512_setall_f64(double v) { return v_float64x8(vfmv_v_f_f64m4(v, 8)); }
-
+#endif
 
 #define OPENCV_HAL_IMPL_RISCVV_BIN_OP(bin_op, _Tpvec, intrin) \
 inline _Tpvec operator bin_op (const _Tpvec& a, const _Tpvec& b) \
