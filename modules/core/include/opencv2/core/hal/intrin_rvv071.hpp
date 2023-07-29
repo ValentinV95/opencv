@@ -837,6 +837,20 @@ inline _Tpvec& operator bin_op##= (_Tpvec& a, const _Tpvec& b) \
     return a; \
 }
 
+#define OPENCV_HAL_IMPL_RISCVV_BIN_OPN_X64(bin_op, _Tpvec, _Tel, num) \
+inline _Tpvec operator bin_op (const _Tpvec& a, const _Tpvec& b) \
+{ \
+    _Tel r[num]; \
+    for(int i = 0; i < num; i++ ) r[i] = a.val[i] bin_op b.val[i]; \
+    return _Tpvec(r); \
+} \
+inline _Tpvec& operator bin_op##= (_Tpvec& a, const _Tpvec& b) \
+{ \
+    for(int i = 0; i < num; i++ ) a.val[i] = a.val[i] bin_op b.val[i]; \
+    return a; \
+}
+
+
 OPENCV_HAL_IMPL_RISCVV_BIN_OPN(+, v_uint8x16, vsaddu_vv_u8m1, 16)
 OPENCV_HAL_IMPL_RISCVV_BIN_OPN(-, v_uint8x16, vssubu_vv_u8m1, 16)
 OPENCV_HAL_IMPL_RISCVV_BIN_OPN(+, v_int8x16, vsadd_vv_i8m1, 16)
@@ -851,18 +865,30 @@ OPENCV_HAL_IMPL_RISCVV_BIN_OPN(*, v_int32x4, vmul_vv_i32m1, 4)
 OPENCV_HAL_IMPL_RISCVV_BIN_OPN(+, v_uint32x4, vadd_vv_u32m1, 4)
 OPENCV_HAL_IMPL_RISCVV_BIN_OPN(-, v_uint32x4, vsub_vv_u32m1, 4)
 OPENCV_HAL_IMPL_RISCVV_BIN_OPN(*, v_uint32x4, vmul_vv_u32m1, 4)
+OPENCV_HAL_IMPL_RISCVV_BIN_OPN(+, v_float32x4, vfadd_vv_f32m1, 4)
+OPENCV_HAL_IMPL_RISCVV_BIN_OPN(-, v_float32x4, vfsub_vv_f32m1, 4)
+OPENCV_HAL_IMPL_RISCVV_BIN_OPN(*, v_float32x4, vfmul_vv_f32m1, 4)
+OPENCV_HAL_IMPL_RISCVV_BIN_OPN(/ , v_float32x4, vfdiv_vv_f32m1, 4)
+
+#if CV_SIMD_ELEM64
 OPENCV_HAL_IMPL_RISCVV_BIN_OPN(+, v_int64x2, vadd_vv_i64m1, 2)
 OPENCV_HAL_IMPL_RISCVV_BIN_OPN(-, v_int64x2, vsub_vv_i64m1, 2)
 OPENCV_HAL_IMPL_RISCVV_BIN_OPN(+, v_uint64x2, vadd_vv_u64m1, 2)
 OPENCV_HAL_IMPL_RISCVV_BIN_OPN(-, v_uint64x2, vsub_vv_u64m1, 2)
-OPENCV_HAL_IMPL_RISCVV_BIN_OPN(+, v_float32x4, vfadd_vv_f32m1, 4)
-OPENCV_HAL_IMPL_RISCVV_BIN_OPN(-, v_float32x4, vfsub_vv_f32m1, 4)
-OPENCV_HAL_IMPL_RISCVV_BIN_OPN(*, v_float32x4, vfmul_vv_f32m1, 4)
-OPENCV_HAL_IMPL_RISCVV_BIN_OPN(/, v_float32x4, vfdiv_vv_f32m1, 4)
 OPENCV_HAL_IMPL_RISCVV_BIN_OPN(+, v_float64x2, vfadd_vv_f64m1, 2)
 OPENCV_HAL_IMPL_RISCVV_BIN_OPN(-, v_float64x2, vfsub_vv_f64m1, 2)
 OPENCV_HAL_IMPL_RISCVV_BIN_OPN(*, v_float64x2, vfmul_vv_f64m1, 2)
-OPENCV_HAL_IMPL_RISCVV_BIN_OPN(/, v_float64x2, vfdiv_vv_f64m1, 2)
+OPENCV_HAL_IMPL_RISCVV_BIN_OPN(/ , v_float64x2, vfdiv_vv_f64m1, 2)
+#else
+OPENCV_HAL_IMPL_RISCVV_BIN_OPN_X64(+, v_int64x2,  int64, 2)
+OPENCV_HAL_IMPL_RISCVV_BIN_OPN_X64(-, v_int64x2,  int64, 2)
+OPENCV_HAL_IMPL_RISCVV_BIN_OPN_X64(+, v_uint64x2, uint64, 2)
+OPENCV_HAL_IMPL_RISCVV_BIN_OPN_X64(-, v_uint64x2, uint64, 2)
+OPENCV_HAL_IMPL_RISCVV_BIN_OPN_X64(+, v_float64x2,  double, 2)
+OPENCV_HAL_IMPL_RISCVV_BIN_OPN_X64(-, v_float64x2,  double, 2)
+OPENCV_HAL_IMPL_RISCVV_BIN_OPN_X64(*, v_float64x2,  double, 2)
+OPENCV_HAL_IMPL_RISCVV_BIN_OPN_X64(/ , v_float64x2, double, 2)
+#endif
 
 //512
 OPENCV_HAL_IMPL_RISCVV_BIN_OPN(+, v_uint8x64, vsaddu_vv_u8m4, 64)
@@ -879,18 +905,30 @@ OPENCV_HAL_IMPL_RISCVV_BIN_OPN(*, v_int32x16, vmul_vv_i32m4, 16)
 OPENCV_HAL_IMPL_RISCVV_BIN_OPN(+, v_uint32x16, vadd_vv_u32m4, 16)
 OPENCV_HAL_IMPL_RISCVV_BIN_OPN(-, v_uint32x16, vsub_vv_u32m4, 16)
 OPENCV_HAL_IMPL_RISCVV_BIN_OPN(*, v_uint32x16, vmul_vv_u32m4, 16)
-OPENCV_HAL_IMPL_RISCVV_BIN_OPN(+, v_int64x8, vadd_vv_i64m4, 8)
-OPENCV_HAL_IMPL_RISCVV_BIN_OPN(-, v_int64x8, vsub_vv_i64m4, 8)
-OPENCV_HAL_IMPL_RISCVV_BIN_OPN(+, v_uint64x8, vadd_vv_u64m4, 8)
-OPENCV_HAL_IMPL_RISCVV_BIN_OPN(-, v_uint64x8, vsub_vv_u64m4, 8)
 OPENCV_HAL_IMPL_RISCVV_BIN_OPN(+, v_float32x16, vfadd_vv_f32m4, 16)
 OPENCV_HAL_IMPL_RISCVV_BIN_OPN(-, v_float32x16, vfsub_vv_f32m4, 16)
 OPENCV_HAL_IMPL_RISCVV_BIN_OPN(*, v_float32x16, vfmul_vv_f32m4, 16)
 OPENCV_HAL_IMPL_RISCVV_BIN_OPN(/, v_float32x16, vfdiv_vv_f32m4, 16)
+
+#if CV_SIMD_ELEM64
+OPENCV_HAL_IMPL_RISCVV_BIN_OPN(+, v_int64x8, vadd_vv_i64m4, 8)
+OPENCV_HAL_IMPL_RISCVV_BIN_OPN(-, v_int64x8, vsub_vv_i64m4, 8)
+OPENCV_HAL_IMPL_RISCVV_BIN_OPN(+, v_uint64x8, vadd_vv_u64m4, 8)
+OPENCV_HAL_IMPL_RISCVV_BIN_OPN(-, v_uint64x8, vsub_vv_u64m4, 8)
 OPENCV_HAL_IMPL_RISCVV_BIN_OPN(+, v_float64x8, vfadd_vv_f64m4, 8)
 OPENCV_HAL_IMPL_RISCVV_BIN_OPN(-, v_float64x8, vfsub_vv_f64m4, 8)
 OPENCV_HAL_IMPL_RISCVV_BIN_OPN(*, v_float64x8, vfmul_vv_f64m4, 8)
 OPENCV_HAL_IMPL_RISCVV_BIN_OPN(/, v_float64x8, vfdiv_vv_f64m4, 8)
+#else
+OPENCV_HAL_IMPL_RISCVV_BIN_OPN_X64(+, v_int64x8,  int64, 8)
+OPENCV_HAL_IMPL_RISCVV_BIN_OPN_X64(-, v_int64x8,  int64, 8)
+OPENCV_HAL_IMPL_RISCVV_BIN_OPN_X64(+, v_uint64x8, uint64, 8)
+OPENCV_HAL_IMPL_RISCVV_BIN_OPN_X64(-, v_uint64x8, uint64, 8)
+OPENCV_HAL_IMPL_RISCVV_BIN_OPN_X64(+, v_float64x8,  double, 8)
+OPENCV_HAL_IMPL_RISCVV_BIN_OPN_X64(-, v_float64x8,  double, 8)
+OPENCV_HAL_IMPL_RISCVV_BIN_OPN_X64(*, v_float64x8,  double, 8)
+OPENCV_HAL_IMPL_RISCVV_BIN_OPN_X64(/ , v_float64x8, double, 8)
+#endif
 
 // TODO: exp, log, sin, cos
 
@@ -906,6 +944,15 @@ inline _Tpvec func(const _Tpvec& a, const _Tpvec& b) \
     return _Tpvec(intrin(a.val, b.val, num)); \
 }
 
+#define OPENCV_HAL_IMPL_RISCVV_BINN_FUNC_X64(_Tpvec, func, _Tel, func_el, num) \
+inline _Tpvec func(const _Tpvec& a, const _Tpvec& b) \
+{ \
+    _Tel r[num]; \
+    for(int i = 0; i < num; i++ ) r[i] = func_el(a.val[i], b.val[i]); \
+    return _Tpvec(r); \
+}
+
+
 OPENCV_HAL_IMPL_RISCVV_BINN_FUNC(v_uint8x16, v_min, vminu_vv_u8m1, 16)
 OPENCV_HAL_IMPL_RISCVV_BINN_FUNC(v_uint8x16, v_max, vmaxu_vv_u8m1, 16)
 OPENCV_HAL_IMPL_RISCVV_BINN_FUNC(v_int8x16, v_min, vmin_vv_i8m1, 16)
@@ -920,9 +967,18 @@ OPENCV_HAL_IMPL_RISCVV_BINN_FUNC(v_int32x4, v_min, vmin_vv_i32m1, 4)
 OPENCV_HAL_IMPL_RISCVV_BINN_FUNC(v_int32x4, v_max, vmax_vv_i32m1, 4)
 OPENCV_HAL_IMPL_RISCVV_BINN_FUNC(v_float32x4, v_min, vfmin_vv_f32m1, 4)
 OPENCV_HAL_IMPL_RISCVV_BINN_FUNC(v_float32x4, v_max, vfmax_vv_f32m1, 4)
+
+#if CV_SIMD_ELEM64
 OPENCV_HAL_IMPL_RISCVV_BINN_FUNC(v_float64x2, v_min, vfmin_vv_f64m1, 2)
 OPENCV_HAL_IMPL_RISCVV_BINN_FUNC(v_float64x2, v_max, vfmax_vv_f64m1, 2)
-
+#else
+#ifndef MAX
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
+#endif
+OPENCV_HAL_IMPL_RISCVV_BINN_FUNC_X64(v_float64x2, v_min, double, MIN, 2)
+OPENCV_HAL_IMPL_RISCVV_BINN_FUNC_X64(v_float64x2, v_max, double, MAX, 2)
+#endif
 
 // 512
 OPENCV_HAL_IMPL_RISCVV_BINN_FUNC(v_uint8x64, v_min, vminu_vv_u8m4, 64)
@@ -939,8 +995,13 @@ OPENCV_HAL_IMPL_RISCVV_BINN_FUNC(v_int32x16, v_min, vmin_vv_i32m4, 16)
 OPENCV_HAL_IMPL_RISCVV_BINN_FUNC(v_int32x16, v_max, vmax_vv_i32m4, 16)
 OPENCV_HAL_IMPL_RISCVV_BINN_FUNC(v_float32x16, v_min, vfmin_vv_f32m4, 16)
 OPENCV_HAL_IMPL_RISCVV_BINN_FUNC(v_float32x16, v_max, vfmax_vv_f32m4, 16)
+#if CV_SIMD_ELEM64
 OPENCV_HAL_IMPL_RISCVV_BINN_FUNC(v_float64x8, v_min, vfmin_vv_f64m4, 8)
 OPENCV_HAL_IMPL_RISCVV_BINN_FUNC(v_float64x8, v_max, vfmax_vv_f64m4, 8)
+#else
+OPENCV_HAL_IMPL_RISCVV_BINN_FUNC_X64(v_float64x8, v_min, double, MIN, 8)
+OPENCV_HAL_IMPL_RISCVV_BINN_FUNC_X64(v_float64x8, v_max, double, MAX, 8)
+#endif
 
 #define OPENCV_HAL_IMPL_RISCVV_FMA_FUNC(_Tpvec, num, suffix, preffix) \
 inline _Tpvec v_fma(const _Tpvec& a, const _Tpvec& b, const _Tpvec& c) \
