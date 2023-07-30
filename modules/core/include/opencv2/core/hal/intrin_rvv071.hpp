@@ -1388,7 +1388,7 @@ OPENCV_HAL_IMPL_RISCVV_MUL_EXPAND_512(v_uint16x32, v_uint32x16, vuint32m4_t, u32
 OPENCV_HAL_IMPL_RISCVV_MUL_EXPAND_512(v_int32x16, v_int64x8, vint64m4_t, i64, i32, 16, mul)
 OPENCV_HAL_IMPL_RISCVV_MUL_EXPAND_512(v_uint32x16, v_uint64x8, vuint64m4_t, u64, u32, 16, mulu)
 #else
-OPENCV_HAL_IMPL_RISCVV_MUL_EXPAND_X64(v_int32x16, v_int64x8  , int64, 16)
+OPENCV_HAL_IMPL_RISCVV_MUL_EXPAND_X64(v_int32x16 , v_int64x8 , int64, 16)
 OPENCV_HAL_IMPL_RISCVV_MUL_EXPAND_X64(v_uint32x16, v_uint64x8, uint64, 16)
 #endif
 
@@ -1462,6 +1462,7 @@ OPENCV_HAL_IMPL_RISCVV_DOT_PRODUCT3(dotprod, v_int16x8, v_int32x4)
 OPENCV_HAL_IMPL_RISCVV_DOT_PRODUCT3(dotprod, v_int16x32, v_int32x16)
 
 // 32 >> 64
+#if CV_SIMD_ELEM64
 inline v_int64x2 v_dotprod(const v_int32x4& a, const v_int32x4& b)
 {
     vint64m2_t res = vundefined_i64m2();
@@ -1469,6 +1470,7 @@ inline v_int64x2 v_dotprod(const v_int32x4& a, const v_int32x4& b)
     res = vrgather_vv_i64m2(res, (vuint64m2_t){0, 2, 1, 3}, 4);
     return v_int64x2(vadd_vv_i64m1(vget_i64m2_i64m1(res, 0), vget_i64m2_i64m1(res, 1), 2));
 }
+
 inline v_int64x8 v_dotprod(const v_int32x16& a, const v_int32x16& b)
 {
     //vint64m4_t res = vundefined_i64m4();
@@ -1492,6 +1494,24 @@ inline v_int64x8 v_dotprod(const v_int32x16& a, const v_int32x16& b)
                                                1, 3, 5, 7, 9, 11, 13, 15 }, 16);
     return v_int64x8(vadd_vv_i64m4(vget_i64m8_i64m4(res, 0), vget_i64m8_i64m4(res, 1), 8));
 }
+#else
+#define OPENCV_HAL_IMPL_RISCVV_DOT_PROD_X64(_Tpvec, _Tres, _Tel, num) \
+inline _Tres v_dotprod(const _Tpvec& a, const _Tpvec& b) \
+{ \
+    _Tres r; \
+    for( int i = 0; i < (num/2); i++ ) \
+      r.val[i] = (_Tel)a.val[i * 2] * (_Tel)b.val[i * 2] + (_Tel)a.val[i * 2 + 1] * (_Tel)b.val[i * 2 + 1]; \
+    return r; \
+} \
+inline _Tres v_dotprod_fast(const _Tpvec& a, const _Tpvec& b) \
+{ \
+    return v_dotprod(a,b); \
+}
+
+OPENCV_HAL_IMPL_RISCVV_DOT_PROD_X64(v_int32x4, v_int64x2, int64, 4)
+OPENCV_HAL_IMPL_RISCVV_DOT_PROD_X64(v_int32x16, v_int64x8, int64, 16)
+
+#endif
 
 OPENCV_HAL_IMPL_RISCVV_DOT_PRODUCT3(dotprod, v_int32x4, v_int64x2)
 OPENCV_HAL_IMPL_RISCVV_DOT_PRODUCT3(dotprod, v_int32x16, v_int64x8)
@@ -1595,6 +1615,8 @@ OPENCV_HAL_IMPL_RISCVV_DOT_PRODUCT3(dotprod_expand, v_int8x16, v_int32x4)
 OPENCV_HAL_IMPL_RISCVV_DOT_PRODUCT3(dotprod_expand, v_uint8x64, v_uint32x16)
 OPENCV_HAL_IMPL_RISCVV_DOT_PRODUCT3(dotprod_expand, v_int8x64, v_int32x16)
 
+
+#if CV_SIMD_ELEM64
 inline v_uint64x2 v_dotprod_expand(const v_uint16x8& a, const v_uint16x8& b)
 {
     vuint32m2_t v1 = vundefined_u32m2();
@@ -1682,6 +1704,29 @@ inline v_int64x8 v_dotprod_expand(const v_int16x32& a, const v_int16x32& b)
     vint64m8_t v2 = vwadd_vv_i64m8(vget_i32m8_i32m4(v1, 0), vget_i32m8_i32m4(v1, 1), 4);
     return v_int64x8(vadd_vv_i64m4(vget_i64m8_i64m4(v2, 0), vget_i64m8_i64m4(v2, 1), 2));
 }
+#else
+
+#define OPENCV_HAL_IMPL_RISCVV_DOT_PROD_EXPAND_X64(_Tpvec, _Tres, _Tel, num) \
+inline _Tres v_dotprod_expand(const _Tpvec& a, const _Tpvec& b) \
+{ \
+    _Tres r; \
+    for( int i = 0; i < (num/4); i++ ) \
+      r.val[i] = (_Tel)a.val[i * 4] * (_Tel)b.val[i * 4] + (_Tel)a.val[i * 4 + 1] * (_Tel)b.val[i * 4 + 1] + \
+                 (_Tel)a.val[i * 4 + 2] * (_Tel)b.val[i * 4 + 2] + (_Tel)a.val[i * 4 + 3] * (_Tel)b.val[i * 4 + 3]; \
+    return r; \
+} \
+inline _Tres v_dotprod_expand_fast(const _Tpvec& a, const _Tpvec& b) \
+{ \
+    return v_dotprod_expand(a,b); \
+}
+
+OPENCV_HAL_IMPL_RISCVV_DOT_PROD_EXPAND_X64(v_int16x8, v_int64x2, int64, 8)
+OPENCV_HAL_IMPL_RISCVV_DOT_PROD_EXPAND_X64(v_uint16x8, v_uint64x2,  uint64, 8)
+OPENCV_HAL_IMPL_RISCVV_DOT_PROD_EXPAND_X64(v_int16x32, v_int64x8, int64, 32)
+OPENCV_HAL_IMPL_RISCVV_DOT_PROD_EXPAND_X64(v_uint16x32, v_uint64x8, uint64, 32)
+
+#endif
+
 
 OPENCV_HAL_IMPL_RISCVV_DOT_PRODUCT3(dotprod_expand, v_uint16x8, v_uint64x2)
 OPENCV_HAL_IMPL_RISCVV_DOT_PRODUCT3(dotprod_expand, v_int16x8, v_int64x2)
@@ -1716,6 +1761,7 @@ OPENCV_HAL_IMPL_RISCVV_DOT_PRODUCT3(dotprod_fast, v_int16x32, v_int32x16)
 
 
 // 32 >> 64
+#if CV_SIMD_ELEM64
 inline v_int64x2 v_dotprod_fast(const v_int32x4& a, const v_int32x4& b)
 {
     vint64m2_t v1 = vundefined_i64m2();
@@ -1734,6 +1780,7 @@ inline v_int64x8 v_dotprod_fast(const v_int32x16& a, const v_int32x16& b)
     v1 = vwmul_vv_i64m8(a.val, b.val, 16);
     return v_int64x8(vadd_vv_i64m4(vget_i64m8_i64m4(v1, 0), vget_i64m8_i64m4(v1, 1), 8));
 }
+#endif
 
 OPENCV_HAL_IMPL_RISCVV_DOT_PRODUCT3(dotprod_fast, v_int32x4, v_int64x2)
 OPENCV_HAL_IMPL_RISCVV_DOT_PRODUCT3(dotprod_fast, v_int32x16, v_int64x8)
@@ -1793,6 +1840,8 @@ OPENCV_HAL_IMPL_RISCVV_DOT_PRODUCT3(dotprod_expand_fast, v_uint8x64, v_uint32x16
 OPENCV_HAL_IMPL_RISCVV_DOT_PRODUCT3(dotprod_expand_fast, v_int8x64, v_int32x16)
 
 // 16 >> 64
+#if CV_SIMD_ELEM64
+
 inline v_uint64x2 v_dotprod_expand_fast(const v_uint16x8& a, const v_uint16x8& b)
 {
     vuint32m2_t v1 = vundefined_u32m2();
@@ -1840,6 +1889,7 @@ inline v_int64x8 v_dotprod_expand_fast(const v_int16x32& a, const v_int16x32& b)
     vint64m8_t v2 = vwadd_vv_i64m8(vget_i32m8_i32m4(v1, 0), vget_i32m8_i32m4(v1, 1), 16);
     return  v_int64x8(vadd_vv_i64m4(vget_i64m8_i64m4(v2, 0), vget_i64m8_i64m4(v2, 1), 8));
 }
+#endif
 
 OPENCV_HAL_IMPL_RISCVV_DOT_PRODUCT3(dotprod_expand_fast, v_uint16x8, v_uint64x2)
 OPENCV_HAL_IMPL_RISCVV_DOT_PRODUCT3(dotprod_expand_fast, v_int16x8, v_int64x2)
