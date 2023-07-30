@@ -1349,14 +1349,14 @@ inline void v_mul_expand(const _Tpvec& a, const _Tpvec& b, \
     d.val = vget_##_Tpwv##_##_Tpv(res, 1); \
 }
 
-#define OPENCV_HAL_IMPL_RISCVV_MUL_EXPAND_X64(_Tpvec, _Tpwvec, num) \
+#define OPENCV_HAL_IMPL_RISCVV_MUL_EXPAND_X64(_Tpvec, _Tpwvec, _Tel, num) \
 inline void v_mul_expand(const _Tpvec& a, const _Tpvec& b, \
                          _Tpwvec& c, _Tpwvec& d) \
 { \
     for(int i = 0; i < num / 2; i++ ) \
     { \
-        c.val[i] = a.val[i] * b.val[i]; \
-        d.val[i] = a.val[i + (num / 2)] * b.val[i + (num / 2)]; \
+        c.val[i] = (_Tel)a.val[i] * (_Tel)b.val[i]; \
+        d.val[i] = (_Tel)a.val[i + (num / 2)] * (_Tel)b.val[i + (num / 2)]; \
     } \
 }
 
@@ -1368,8 +1368,8 @@ OPENCV_HAL_IMPL_RISCVV_MUL_EXPAND(v_uint16x8, v_uint32x4, vuint32m2_t, u32m1, u3
 OPENCV_HAL_IMPL_RISCVV_MUL_EXPAND(v_int32x4, v_int64x2, vint64m2_t, i64m1, i64m2, 4, mul)
 OPENCV_HAL_IMPL_RISCVV_MUL_EXPAND(v_uint32x4, v_uint64x2, vuint64m2_t, u64m1, u64m2, 4, mulu)
 #else
-OPENCV_HAL_IMPL_RISCVV_MUL_EXPAND_X64(v_int32x4 , v_int64x2 , 4)
-OPENCV_HAL_IMPL_RISCVV_MUL_EXPAND_X64(v_uint32x4, v_uint64x2, 4)
+OPENCV_HAL_IMPL_RISCVV_MUL_EXPAND_X64(v_int32x4 , v_int64x2 , int64, 4)
+OPENCV_HAL_IMPL_RISCVV_MUL_EXPAND_X64(v_uint32x4, v_uint64x2, uint64, 4)
 #endif
 
 //512
@@ -1388,8 +1388,8 @@ OPENCV_HAL_IMPL_RISCVV_MUL_EXPAND_512(v_uint16x32, v_uint32x16, vuint32m4_t, u32
 OPENCV_HAL_IMPL_RISCVV_MUL_EXPAND_512(v_int32x16, v_int64x8, vint64m4_t, i64, i32, 16, mul)
 OPENCV_HAL_IMPL_RISCVV_MUL_EXPAND_512(v_uint32x16, v_uint64x8, vuint64m4_t, u64, u32, 16, mulu)
 #else
-OPENCV_HAL_IMPL_RISCVV_MUL_EXPAND_X64(v_int32x16, v_int64x8, 16)
-OPENCV_HAL_IMPL_RISCVV_MUL_EXPAND_X64(v_uint32x16, v_uint64x8, 16)
+OPENCV_HAL_IMPL_RISCVV_MUL_EXPAND_X64(v_int32x16, v_int64x8  , int64, 16)
+OPENCV_HAL_IMPL_RISCVV_MUL_EXPAND_X64(v_uint32x16, v_uint64x8, uint64, 16)
 #endif
 
 
