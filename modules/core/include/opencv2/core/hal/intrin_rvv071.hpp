@@ -2326,9 +2326,9 @@ inline void v_transpose4x4(const v_##_Tp##32x16& a0, const v_##_Tp##32x16& a1, \
         b3.val = vset_##_T##m4(b3.val, i, vget_##_T##m4_##_T##m1(val, 3));   \
     } \
 }
-OPENCV_HAL_IMPL_RISCVV_TRANSPOSE4x4_512(uint, u32)
-OPENCV_HAL_IMPL_RISCVV_TRANSPOSE4x4_512(int, i32)
-OPENCV_HAL_IMPL_RISCVV_TRANSPOSE4x4_512(float, f32)
+    OPENCV_HAL_IMPL_RISCVV_TRANSPOSE4x4_512(uint, u32)
+    OPENCV_HAL_IMPL_RISCVV_TRANSPOSE4x4_512(int, i32)
+    OPENCV_HAL_IMPL_RISCVV_TRANSPOSE4x4_512(float, f32)
 
 
 #define OPENCV_HAL_IMPL_RISCVV_SHIFT_LEFT(_Tpvec, suffix, _T, regnum, num) \
@@ -2336,6 +2336,18 @@ inline _Tpvec operator << (const _Tpvec& a, int n) \
 { return _Tpvec((vsll_vx_##_T##m##regnum(a.val, n, num))); } \
 template<int n> inline _Tpvec v_shl(const _Tpvec& a) \
 { return _Tpvec((vsll_vx_##_T##m##regnum(a.val, n, num))); }
+
+#define OPENCV_HAL_IMPL_RISCVV_SHIFT_LEFT_X64(_Tpvec, num) \
+inline _Tpvec operator << (const _Tpvec& a, int n) \
+{\
+    _Tpvec res; \
+    for (int i = 0; i < num; i++) \
+        res.val[i] = a.val[i] << n; \
+    return res; \
+}\
+template<int n> inline _Tpvec v_shl(const _Tpvec& a) \
+{ return a << n; }
+
 
 #define OPENCV_HAL_IMPL_RISCVV_SHIFT_RIGHT(_Tpvec, suffix, _T, regnum, num, intric) \
 inline _Tpvec operator >> (const _Tpvec& a, int n) \
@@ -2345,29 +2357,65 @@ template<int n> inline _Tpvec v_shr(const _Tpvec& a) \
 template<int n> inline _Tpvec v_rshr(const _Tpvec& a) \
 { return _Tpvec((v##intric##_vx_##_T##m##regnum(vadd_vx_##_T##m##regnum(a.val, 1<<(n-1), num), n, num))); }
 
+#define OPENCV_HAL_IMPL_RISCVV_SHIFT_RIGHT_X64(_Tpvec, num) \
+inline _Tpvec operator >> (const _Tpvec& a, int n) \
+{\
+    _Tpvec res; \
+    for (int i = 0; i < num; i++) \
+        res.val[i] = a.val[i] >> n; \
+    return res; \
+}\
+template<int n> inline _Tpvec v_shr(const _Tpvec& a) \
+{ return a >> n; } \
+template<int n> inline _Tpvec v_rshr(const _Tpvec& a) \
+{\
+    _Tpvec res; \
+    for( int i = 0; i < num; i++ ) \
+        res.val[i] = (a.val[i] + (1 << (n - 1))) >> n; \
+    return res; \
+}
+
+
 // trade efficiency for convenience
 #define OPENCV_HAL_IMPL_RISCVV_SHIFT_OP(suffix, _T, regnum, num, intrin) \
 OPENCV_HAL_IMPL_RISCVV_SHIFT_LEFT(v_##suffix##x##num, suffix, _T, regnum, num) \
 OPENCV_HAL_IMPL_RISCVV_SHIFT_RIGHT(v_##suffix##x##num, suffix, _T, regnum, num, intrin)
 
+#define OPENCV_HAL_IMPL_RISCVV_SHIFT_OP_X64(suffix, num) \
+OPENCV_HAL_IMPL_RISCVV_SHIFT_LEFT_X64(v_##suffix##x##num , num) \
+OPENCV_HAL_IMPL_RISCVV_SHIFT_RIGHT_X64(v_##suffix##x##num, num)
+
+
 OPENCV_HAL_IMPL_RISCVV_SHIFT_OP(uint8,  u8,  1, 16, srl)
 OPENCV_HAL_IMPL_RISCVV_SHIFT_OP(uint16, u16, 1, 8, srl)
 OPENCV_HAL_IMPL_RISCVV_SHIFT_OP(uint32, u32, 1, 4, srl)
-OPENCV_HAL_IMPL_RISCVV_SHIFT_OP(uint64, u64, 1, 2, srl)
 OPENCV_HAL_IMPL_RISCVV_SHIFT_OP(int8,   i8,  1, 16, sra)
 OPENCV_HAL_IMPL_RISCVV_SHIFT_OP(int16,  i16, 1, 8, sra)
 OPENCV_HAL_IMPL_RISCVV_SHIFT_OP(int32,  i32, 1, 4, sra)
+
+#if CV_SIMD_ELEM64
+OPENCV_HAL_IMPL_RISCVV_SHIFT_OP(uint64, u64, 1, 2, srl)
 OPENCV_HAL_IMPL_RISCVV_SHIFT_OP(int64,  i64, 1, 2, sra)
+#else
+OPENCV_HAL_IMPL_RISCVV_SHIFT_OP_X64(uint64, 2)
+OPENCV_HAL_IMPL_RISCVV_SHIFT_OP_X64(int64 , 2)
+#endif
 
 //512
 OPENCV_HAL_IMPL_RISCVV_SHIFT_OP(uint8,  u8,  4, 64, srl)
 OPENCV_HAL_IMPL_RISCVV_SHIFT_OP(uint16, u16, 4, 32, srl)
 OPENCV_HAL_IMPL_RISCVV_SHIFT_OP(uint32, u32, 4, 16, srl)
-OPENCV_HAL_IMPL_RISCVV_SHIFT_OP(uint64, u64, 4, 8, srl)
 OPENCV_HAL_IMPL_RISCVV_SHIFT_OP(int8,   i8,  4, 64, sra)
 OPENCV_HAL_IMPL_RISCVV_SHIFT_OP(int16,  i16, 4, 32, sra)
 OPENCV_HAL_IMPL_RISCVV_SHIFT_OP(int32,  i32, 4, 16, sra)
+
+#if CV_SIMD_ELEM64
+OPENCV_HAL_IMPL_RISCVV_SHIFT_OP(uint64, u64, 4, 8, srl)
 OPENCV_HAL_IMPL_RISCVV_SHIFT_OP(int64,  i64, 4, 8, sra)
+#else
+OPENCV_HAL_IMPL_RISCVV_SHIFT_OP_X64(uint64, 8)
+OPENCV_HAL_IMPL_RISCVV_SHIFT_OP_X64(int64, 8)
+#endif
 
 #if 0
 #define VUP4(n) {0, 1, 2, 3}
