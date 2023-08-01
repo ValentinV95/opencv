@@ -1930,15 +1930,27 @@ inline float v_reduce_sum(const v_float32x4& a) \
 }
 inline double v_reduce_sum(const v_float64x2& a) \
 {\
-    vfloat64m1_t val = vfmv_v_f_f64m1(0.0, 2); \
-    val = vfredsum_vs_f64m1_f64m1(val, a.val, val, 2);    \
-    return vfmv_f_s_f64m1_f64(val, 2);    \
+    double c = 0.0; \
+    for (int i = 0; i < 2; i++) \
+        c += a.val[i]; \
+    return c; \
 }
+
 inline uint64 v_reduce_sum(const v_uint64x2& a)
-{ return vext_x_v_u64m1_u64((vuint64m1_t)a.val, 0, 2)+vext_x_v_u64m1_u64((vuint64m1_t)a.val, 1, 2); }
+{
+    uint64 c = 0;
+    for (int i = 0; i < 2; i++) 
+      c += a.val[i]; 
+    return c; 
+}
 
 inline int64 v_reduce_sum(const v_int64x2& a)
-{ return vext_x_v_i64m1_i64((vint64m1_t)a.val, 0, 2)+vext_x_v_i64m1_i64((vint64m1_t)a.val, 1, 2); }
+{
+    int64 c = 0;
+    for (int i = 0; i < 2; i++)
+        c += a.val[i];
+    return c;
+}
 
 //512
 OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_W(int8, int16, i16, int, sum, vwredsum_vs_i8m4_i16m1, 64)
@@ -1969,21 +1981,24 @@ inline float v_reduce_sum(const v_float32x16& a)
 }
 inline double v_reduce_sum(const v_float64x8& a) 
 {
-    vfloat64m1_t val = vfmv_v_f_f64m1(0.0, 2); 
-    val = vfredsum_vs_f64m4_f64m1(val, a.val, val, 8);    
-    return vfmv_f_s_f64m1_f64(val, 2);    
+    double c = 0.0;
+    for (int i = 0; i < 8; i++)
+        c += a.val[i];
+    return c;
 }
 inline uint64 v_reduce_sum(const v_uint64x8& a)
-{  
-    vuint64m2_t v = vadd_vv_u64m2(vget_u64m4_u64m2(a.val, 0), vget_u64m4_u64m2(a.val, 1), 8);
-    vuint64m1_t v1 = vadd_vv_u64m1(vget_u64m2_u64m1(v, 0), vget_u64m2_u64m1(v, 1), 4);
-    return vext_x_v_u64m1_u64(v1, 0, 2)+vext_x_v_u64m1_u64(v1, 1, 2); 
+{
+    uint64 c = 0;
+    for (int i = 0; i < 2; i++)
+        c += a.val[i];
+    return c;
 }
 inline int64 v_reduce_sum(const v_int64x8& a)
-{  
-    vint64m2_t v = vadd_vv_i64m2(vget_i64m4_i64m2(a.val, 0), vget_i64m4_i64m2(a.val, 1), 8);
-    vint64m1_t v1 = vadd_vv_i64m1(vget_i64m2_i64m1(v, 0), vget_i64m2_i64m1(v, 1), 4);
-    return vext_x_v_i64m1_i64(v1, 0, 2)+vext_x_v_i64m1_i64(v1, 1, 2); 
+{
+    int64 c = 0;
+    for (int i = 0; i < 2; i++)
+        c += a.val[i];
+    return c;
 }
 
 
@@ -1995,11 +2010,20 @@ inline scalartype v_reduce_##func(const v_##_Tpvec##x##num& a) \
     return val[0];    \
 }
 
-#define OPENCV_HAL_IMPL_RISCVV_REDUCE_OP(func)    \
+#define OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_X64(_Tpvec, func_name, func, num) \
+inline _Tpvec v_reduce_##func_name(const v_##_Tpvec##x##num& a) \
+{\
+    _Tpvec c = a.val[0]; \
+    for (int i = 1; i < num; i++) \
+        c = func(c, a.val[i]); \
+    return c; \
+}
+
+
+#define OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_1(func)    \
 OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_(int8,  i8, 1, int, func, red##func, 16)    \
 OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_(int16, i16, 1, int, func, red##func, 8)    \
 OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_(int32, i32, 1, int, func, red##func, 4)    \
-OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_(int64, i64, 1, int, func, red##func, 2)    \
 OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_(uint8,  u8, 1, unsigned, func, red##func##u, 16)    \
 OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_(uint16, u16, 1, unsigned, func, red##func##u, 8)    \
 OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_(uint32, u32, 1, unsigned, func, red##func##u, 4)    \
@@ -2007,13 +2031,32 @@ OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_(float32, f32, 1, float, func, fred##func, 4) \
 OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_(int8,  i8, 4, int, func, red##func, 64)    \
 OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_(int16, i16, 4, int, func, red##func, 32)    \
 OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_(int32, i32, 4, int, func, red##func, 16)    \
-OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_(int64, i64, 4, int, func, red##func, 8)    \
 OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_(uint8,  u8, 4, unsigned, func, red##func##u, 64)    \
 OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_(uint16, u16, 4, unsigned, func, red##func##u, 32)    \
 OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_(uint32, u32, 4, unsigned, func, red##func##u, 16)    \
 OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_(float32, f32, 4, float, func, fred##func, 16)
+
+#if CV_SIMD_ELEM64
+#define OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_2(func)    \
+OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_(int64, i64, 1, int, func, red##func, 2)    \
+OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_(int64, i64, 4, int, func, red##func, 8)    
+#define OPENCV_HAL_IMPL_RISCVV_REDUCE_OP(func) \
+OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_1(func) \
+OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_2(func)
+#else
+#define OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_2(func_name, func)    \
+OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_X64(int64, func_name, func, 2)    \
+OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_X64(int64, func_name, func, 8)    
+#define OPENCV_HAL_IMPL_RISCVV_REDUCE_OP(func) \
+OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_1(func)
+
+OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_2(max,MAX)
+OPENCV_HAL_IMPL_RISCVV_REDUCE_OP_2(min,MIN)
+#endif
+
 OPENCV_HAL_IMPL_RISCVV_REDUCE_OP(max)
 OPENCV_HAL_IMPL_RISCVV_REDUCE_OP(min)
+
 
 inline v_float32x4 v_reduce_sum4(const v_float32x4& a, const v_float32x4& b,
                                  const v_float32x4& c, const v_float32x4& d)
