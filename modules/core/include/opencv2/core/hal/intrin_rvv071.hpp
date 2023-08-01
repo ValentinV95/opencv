@@ -2163,24 +2163,53 @@ inline _Tpvec operator >= (const _Tpvec& a, const _Tpvec& b) \
     return _Tpvec(vmerge_vxm_##_Tp(mask, vmv_v_x_##_Tp(0, num), -1, num));    \
 } \
 
+#define OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP_X64_(_Tpvec, op, num) \
+inline _Tpvec operator op (const _Tpvec& a, const _Tpvec& b) \
+{ \
+    _Tpvec res; \
+    for (int i = 0; i < num; i++) \
+        res.val[i] = a.val[i] op b.val[i]; \
+    return res; \
+}
+
+#define OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP_X64(_Tpvec, num) \
+OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP_X64_(_Tpvec, == , num) \
+OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP_X64_(_Tpvec, != , num) \
+OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP_X64_(_Tpvec, < , num) \
+OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP_X64_(_Tpvec, > , num) \
+OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP_X64_(_Tpvec, <= , num) \
+OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP_X64_(_Tpvec, >= , num) \
+
 OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP(v_int8x16, i8m1,  8, 16, _vv_)
 OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP(v_int16x8, i16m1, 16, 8, _vv_)
 OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP(v_int32x4, i32m1, 32, 4, _vv_)
-OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP(v_int64x2, i64m1, 64, 2, _vv_)
 OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP(v_uint8x16, u8m1, 8, 16, u_vv_)
 OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP(v_uint16x8, u16m1, 16, 8, u_vv_)
 OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP(v_uint32x4, u32m1, 32, 4, u_vv_)
+
+#if CV_SIMD_ELEM64
+OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP(v_int64x2, i64m1, 64, 2, _vv_)
 OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP(v_uint64x2, u64m1, 64, 2, u_vv_)
+#else
+OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP_X64(v_int64x2 , 2)
+OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP_X64(v_uint64x2, 2)
+#endif
 
 //512
 OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP(v_int8x64, i8m4,  2, 64, _vv_)
 OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP(v_int16x32, i16m4, 4, 32, _vv_)
 OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP(v_int32x16, i32m4, 8, 16, _vv_)
-OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP(v_int64x8, i64m4, 16, 8, _vv_)
 OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP(v_uint8x64, u8m4, 2, 64, u_vv_)
 OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP(v_uint16x32, u16m4, 4, 32, u_vv_)
 OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP(v_uint32x16, u32m4, 8, 16, u_vv_)
+
+#if CV_SIMD_ELEM64
+OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP(v_int64x8, i64m4, 16, 8, _vv_)
 OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP(v_uint64x8, u64m4, 16, 8, u_vv_)
+#else
+OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP_X64(v_int64x8, 8)
+OPENCV_HAL_IMPL_RISCVV_INT_CMP_OP_X64(v_uint64x8, 8)
+#endif
 
 #define OPENCV_HAL_IMPL_RISCVV_FLT_CMP_OP(_Tpvec, _Tp, _T, num) \
 inline _Tpvec operator == (const _Tpvec& a, const _Tpvec& b) \
@@ -2226,12 +2255,34 @@ inline _Tpvec v_not_nan(const _Tpvec& a) \
     return _Tpvec((vfloat##_Tp##_t)res); \
 }
 
+#define OPENCV_HAL_IMPL_RISCVV_FLT_CMP_OP_X64_(_Tpvec, _Ti, op, num) \
+inline _Tpvec operator op (const _Tpvec& a, const _Tpvec& b) \
+{ \
+    _Tpvec res; \
+    for (int i = 0; i < num; i++) \
+        res.val[i] = (_Ti)a.val[i] op (_Ti)b.val[i]; \
+    return res; \
+}
+
+#define OPENCV_HAL_IMPL_RISCVV_FLT_CMP_OP_X64(_Tpvec, num) \
+OPENCV_HAL_IMPL_RISCVV_FLT_CMP_OP_X64_(_Tpvec, int64, == , num) \
+OPENCV_HAL_IMPL_RISCVV_FLT_CMP_OP_X64_(_Tpvec, int64, != , num) \
+OPENCV_HAL_IMPL_RISCVV_FLT_CMP_OP_X64_(_Tpvec, int64, < , num) \
+OPENCV_HAL_IMPL_RISCVV_FLT_CMP_OP_X64_(_Tpvec, int64, > , num) \
+OPENCV_HAL_IMPL_RISCVV_FLT_CMP_OP_X64_(_Tpvec, int64, <= , num) \
+OPENCV_HAL_IMPL_RISCVV_FLT_CMP_OP_X64_(_Tpvec, int64, >= , num) \
+
+
 OPENCV_HAL_IMPL_RISCVV_FLT_CMP_OP(v_float32x4, 32m1, 32, 4)
-OPENCV_HAL_IMPL_RISCVV_FLT_CMP_OP(v_float64x2, 64m1, 64, 2)
-
-
 OPENCV_HAL_IMPL_RISCVV_FLT_CMP_OP(v_float32x16, 32m4, 8, 16)
+
+#if CV_SIMD_ELEM64
+OPENCV_HAL_IMPL_RISCVV_FLT_CMP_OP(v_float64x2, 64m1, 64, 2)
 OPENCV_HAL_IMPL_RISCVV_FLT_CMP_OP(v_float64x8, 64m4, 16, 8)
+#else
+OPENCV_HAL_IMPL_RISCVV_FLT_CMP_OP_X64(v_float64x2, 2)
+OPENCV_HAL_IMPL_RISCVV_FLT_CMP_OP_X64(v_float64x8, 8)
+#endif
 
 #define OPENCV_HAL_IMPL_RISCVV_TRANSPOSE4x4(_Tp, _T) \
 inline void v_transpose4x4(const v_##_Tp##32x4& a0, const v_##_Tp##32x4& a1, \
