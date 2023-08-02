@@ -2457,16 +2457,73 @@ template<> inline _Tpvec v_rotate_left<0>(const _Tpvec& a, const _Tpvec& b) \
     CV_UNUSED(b); return a; \
 }
 
+#define OPENCV_HAL_IMPL_ROTATE_SHIFT_OP_X64_(suffix, _Tpvec, opA, opB, num) \
+template<int imm> inline _Tpvec v_rotate_##suffix(const _Tpvec& a) \
+{ \
+    _Tpvec b; \
+    for (int i = 0; i < num; i++) \
+    { \
+        int sIndex = i opA imm; \
+        if (0 <= sIndex && sIndex < num) \
+        { \
+            b.val[i] = a.val[sIndex]; \
+        } \
+        else \
+        { \
+            b.val[i] = 0; \
+        } \
+    } \
+    return b; \
+} \
+template<int imm> inline _Tpvec v_rotate_##suffix(const _Tpvec& a, const _Tpvec& b) \
+{ \
+    _Tpvec c; \
+    for (int i = 0; i < num; i++) \
+    { \
+        int aIndex = i opA imm; \
+        int bIndex = i opA imm opB num; \
+        if (0 <= bIndex && bIndex < num) \
+        { \
+            c.val[i] = b.val[bIndex]; \
+        } \
+        else if (0 <= aIndex && aIndex < num) \
+        { \
+            c.val[i] = a.val[aIndex]; \
+        } \
+        else \
+        { \
+            c.val[i] = 0; \
+        } \
+    } \
+    return c; \
+}
+
+#define OPENCV_HAL_IMPL_ROTATE_SHIFT_OP_X64(_Tpvec, num) \
+OPENCV_HAL_IMPL_ROTATE_SHIFT_OP_X64_(left, _Tpvec, -, +, num) \
+OPENCV_HAL_IMPL_ROTATE_SHIFT_OP_X64_(right, _Tpvec, +, -, num) \
+template<> inline _Tpvec v_rotate_left<0>(const _Tpvec& a) \
+{ return a; } \
+template<> inline _Tpvec v_rotate_left<0>(const _Tpvec& a, const _Tpvec& b) \
+{  CV_UNUSED(b); return a; } \
+
+
 OPENCV_HAL_IMPL_RISCVV_ROTATE_OP(v_uint8x16, vuint8, u8,   16, 32, 1, 2, vmv_v_x, b8)
 OPENCV_HAL_IMPL_RISCVV_ROTATE_OP(v_int8x16, vint8, i8,     16, 32, 1, 2, vmv_v_x, b8)
 OPENCV_HAL_IMPL_RISCVV_ROTATE_OP(v_uint16x8, vuint16, u16,  8, 16, 1, 2, vmv_v_x, b16)
 OPENCV_HAL_IMPL_RISCVV_ROTATE_OP(v_int16x8, vint16, i16,    8, 16, 1, 2, vmv_v_x, b16)
 OPENCV_HAL_IMPL_RISCVV_ROTATE_OP(v_uint32x4, vuint32, u32,  4,  8, 1, 2, vmv_v_x, b32)
 OPENCV_HAL_IMPL_RISCVV_ROTATE_OP(v_int32x4, vint32, i32,    4,  8, 1, 2, vmv_v_x, b32)
-OPENCV_HAL_IMPL_RISCVV_ROTATE_OP(v_uint64x2, vuint64, u64,  2,  4, 1, 2, vmv_v_x, b64)
-OPENCV_HAL_IMPL_RISCVV_ROTATE_OP(v_int64x2, vint64, i64,    2,  4, 1, 2, vmv_v_x, b64)
 OPENCV_HAL_IMPL_RISCVV_ROTATE_OP(v_float32x4, vfloat32, f32, 4, 8, 1, 2, vfmv_v_f, b32)
+
+#if CV_SIMD_ELEM64
+OPENCV_HAL_IMPL_RISCVV_ROTATE_OP(v_uint64x2, vuint64, u64, 2, 4, 1, 2, vmv_v_x, b64)
+OPENCV_HAL_IMPL_RISCVV_ROTATE_OP(v_int64x2, vint64, i64, 2, 4, 1, 2, vmv_v_x, b64)
 OPENCV_HAL_IMPL_RISCVV_ROTATE_OP(v_float64x2, vfloat64, f64, 2, 4, 1, 2, vfmv_v_f, b64)
+#else
+OPENCV_HAL_IMPL_ROTATE_SHIFT_OP_X64(v_uint64x2, 2)
+OPENCV_HAL_IMPL_ROTATE_SHIFT_OP_X64(v_int64x2, 2)
+OPENCV_HAL_IMPL_ROTATE_SHIFT_OP_X64(v_float64x2, 2)
+#endif
 
 //512
 OPENCV_HAL_IMPL_RISCVV_ROTATE_OP(v_uint8x64, vuint8, u8,     64, 128, 4, 8, vmv_v_x, b2)
@@ -2475,10 +2532,17 @@ OPENCV_HAL_IMPL_RISCVV_ROTATE_OP(v_uint16x32, vuint16, u16,  32,  64, 4, 8, vmv_
 OPENCV_HAL_IMPL_RISCVV_ROTATE_OP(v_int16x32, vint16, i16,    32,  64, 4, 8, vmv_v_x, b4)
 OPENCV_HAL_IMPL_RISCVV_ROTATE_OP(v_uint32x16, vuint32, u32,  16,  32, 4, 8, vmv_v_x, b8)
 OPENCV_HAL_IMPL_RISCVV_ROTATE_OP(v_int32x16, vint32, i32,    16,  32, 4, 8, vmv_v_x, b8)
+OPENCV_HAL_IMPL_RISCVV_ROTATE_OP(v_float32x16, vfloat32, f32, 16, 32, 4, 8, vfmv_v_f, b8)
+
+#if CV_SIMD_ELEM64
 OPENCV_HAL_IMPL_RISCVV_ROTATE_OP(v_uint64x8, vuint64, u64,    8,  16, 4, 8, vmv_v_x, b16)
 OPENCV_HAL_IMPL_RISCVV_ROTATE_OP(v_int64x8, vint64, i64,      8,  16, 4, 8, vmv_v_x, b16)
-OPENCV_HAL_IMPL_RISCVV_ROTATE_OP(v_float32x16, vfloat32, f32, 16, 32, 4, 8, vfmv_v_f, b8)
 OPENCV_HAL_IMPL_RISCVV_ROTATE_OP(v_float64x8, vfloat64, f64,  8,  16, 4, 8, vfmv_v_f, b16)
+#else
+OPENCV_HAL_IMPL_ROTATE_SHIFT_OP_X64(v_uint64x8, 8)
+OPENCV_HAL_IMPL_ROTATE_SHIFT_OP_X64(v_int64x8, 8)
+OPENCV_HAL_IMPL_ROTATE_SHIFT_OP_X64(v_float64x8, 8)
+#endif
 
 #define OPENCV_HAL_IMPL_RISCVV_LOADSTORE_OP(_Tpvec, _Tp, _Tp2, len, hnum, num, prefix) \
 inline _Tpvec prefix##_load_low(const _Tp* ptr) \
