@@ -3320,20 +3320,68 @@ void v_rshr_pack_store(_Type* ptr, const v_##_Tp2##x##num2& a) \
     vse_v_##_T1##m##regnum(ptr, intrin##_##_T1##m##regnum(tmp, n, num), num2); \
 }
 
+#define OPENCV_HAL_IMPL_RISCVV_PACK_X64(_Tp, _Tpn, pack_suffix, hnum, num, _c_type, _e_type, _prefL) \
+inline v_##_Tpn##x##num v_##pack_suffix(const v_##_Tp##x##hnum & a, const v_##_Tp##x##hnum& b) \
+{ \
+    _e_type c[num]; \
+    for( int i = 0; i < hnum; i++ ) \
+    { \
+        c[i     ] = static_cast<_c_type>(a.val[i]); \
+        c[i+hnum] = static_cast<_c_type>(b.val[i]); \
+    } \
+    return _prefL##_load(c); \
+} \
+template<int shift> inline v_##_Tpn##x##num v_rshr_##pack_suffix(const v_##_Tp##x##hnum& a, const v_##_Tp##x##hnum& b) \
+{ \
+    _e_type c[num]; \
+    for( int i = 0; i < hnum; i++ ) \
+    { \
+        c[i     ] = static_cast<_c_type>((a.val[i] + ((_Tp)1 << (shift - 1))) >> shift); \
+        c[i+hnum] = static_cast<_c_type>((b.val[i] + ((_Tp)1 << (shift - 1))) >> shift); \
+    } \
+    return _prefL##_load(c); \
+} \
+inline void v_##pack_suffix##_store(_e_type* ptr, v_##_Tpn##x##num& a) \
+{ \
+for (int i = 0; i < num; i++) \
+    ptr[i] = static_cast<_c_type>(a.val[i]); \
+}\
+template<int shift> inline void v_rshr_##pack_suffix##_store(_e_type* ptr, const v_##_Tpn##x##num& a) \
+{ \
+for (int i = 0; i < num; i++) \
+    ptr[i] = static_cast<_c_type>((a.val[i] + ((_Tp)1 << (shift - 1))) >> shift); \
+}
+
+
+
 OPENCV_HAL_IMPL_RISCVV_PACKS(int8, int16, i16, 8, i8, 16, vnclip_vx, vnclip_vx, signed char, 1, 2)
 OPENCV_HAL_IMPL_RISCVV_PACKS(int16, int32, i32, 4, i16, 8, vnclip_vx, vnclip_vx, signed short, 1, 2)
-OPENCV_HAL_IMPL_RISCVV_PACKS(int32, int64, i64, 2, i32, 4, vnclip_vx, vnsra_vx, int, 1, 2)
 OPENCV_HAL_IMPL_RISCVV_PACKS(uint8, uint16, u16, 8, u8, 16, vnclipu_vx, vnclipu_vx, unsigned char, 1, 2)
 OPENCV_HAL_IMPL_RISCVV_PACKS(uint16, uint32, u32, 4, u16, 8, vnclipu_vx, vnclipu_vx, unsigned short, 1, 2)
+#if CV_SIMD_ELEM64
+OPENCV_HAL_IMPL_RISCVV_PACKS(int32, int64, i64, 2, i32, 4, vnclip_vx, vnsra_vx, int, 1, 2)
 OPENCV_HAL_IMPL_RISCVV_PACKS(uint32, uint64, u64, 2, u32, 4, vnclipu_vx, vnsrl_vx, unsigned int, 1, 2)
+#else
+OPENCV_HAL_IMPL_RISCVV_PACK_X64(int64, int32, pack, 2, 4, int, int,v)
+OPENCV_HAL_IMPL_RISCVV_PACK_X64(uint64, uint32, pack, 2, 4, unsigned int, unsigned int,v)
+OPENCV_HAL_IMPL_RISCVV_PACK_X64(int64, int32, pack_u, 2, 4, unsigned int, int,v)
+OPENCV_HAL_IMPL_RISCVV_PACK_X64(uint64, uint32, pack_u, 2, 4, unsigned int, unsigned int,v)
+#endif
 
 //512
 OPENCV_HAL_IMPL_RISCVV_PACKS(int8, int16, i16, 32, i8, 64, vnclip_vx, vnclip_vx, signed char, 4, 8)
 OPENCV_HAL_IMPL_RISCVV_PACKS(int16, int32, i32, 16, i16, 32, vnclip_vx, vnclip_vx, signed short, 4, 8)
-OPENCV_HAL_IMPL_RISCVV_PACKS(int32, int64, i64, 8, i32, 16, vnclip_vx, vnsra_vx, int, 4, 8)
 OPENCV_HAL_IMPL_RISCVV_PACKS(uint8, uint16, u16, 32, u8, 64, vnclipu_vx, vnclipu_vx, unsigned char, 4, 8)
 OPENCV_HAL_IMPL_RISCVV_PACKS(uint16, uint32, u32, 16, u16, 32, vnclipu_vx, vnclipu_vx, unsigned short, 4, 8)
+#if CV_SIMD_ELEM64
+OPENCV_HAL_IMPL_RISCVV_PACKS(int32, int64, i64, 8, i32, 16, vnclip_vx, vnsra_vx, int, 4, 8)
 OPENCV_HAL_IMPL_RISCVV_PACKS(uint32, uint64, u64, 8, u32, 16, vnclipu_vx, vnsrl_vx, unsigned int, 4, 8)
+#else
+OPENCV_HAL_IMPL_RISCVV_PACK_X64(int64, int32, pack, 8, 16, int, int,v512)
+OPENCV_HAL_IMPL_RISCVV_PACK_X64(uint64, uint32, pack, 8, 16, unsigned int, unsigned int, v512)
+OPENCV_HAL_IMPL_RISCVV_PACK_X64(int64, int32, pack_u, 8, 16, unsigned int, int, v512)
+OPENCV_HAL_IMPL_RISCVV_PACK_X64(uint64, uint32, pack_u, 8, 16, unsigned int, unsigned int, v512)
+#endif
 
 // pack boolean
 inline v_uint8x16 v_pack_b(const v_uint16x8& a, const v_uint16x8& b)
@@ -3357,6 +3405,7 @@ inline v_uint8x16 v_pack_b(const v_uint32x4& a, const v_uint32x4& b,
     return v_uint8x16(vnsrl_vx_u8m1(v16, 0, 16));
 }
 
+#if CV_SIMD_ELEM64
 inline v_uint8x16 v_pack_b(const v_uint64x2& a, const v_uint64x2& b, const v_uint64x2& c,
                            const v_uint64x2& d, const v_uint64x2& e, const v_uint64x2& f,
                            const v_uint64x2& g, const v_uint64x2& h)
@@ -3376,6 +3425,24 @@ inline v_uint8x16 v_pack_b(const v_uint64x2& a, const v_uint64x2& b, const v_uin
     v16 = vnsrl_vx_u16m2(v32, 0, 16);   \
     return v_uint8x16(vnsrl_vx_u8m1(v16, 0, 16));
 }
+#else
+inline v_uint8x16 v_pack_b(const v_uint64x2& a, const v_uint64x2& b, const v_uint64x2& c,
+    const v_uint64x2& d, const v_uint64x2& e, const v_uint64x2& f,
+    const v_uint64x2& g, const v_uint64x2& h)
+{
+    uchar res[16] = { \
+        (uchar)a.val[0], (uchar)a.val[1], \
+        (uchar)b.val[0], (uchar)b.val[1], \
+        (uchar)c.val[0], (uchar)c.val[1], \
+        (uchar)d.val[0], (uchar)d.val[1], \
+        (uchar)e.val[0], (uchar)e.val[1], \
+        (uchar)f.val[0], (uchar)f.val[1], \
+        (uchar)g.val[0], (uchar)g.val[1], \
+        (uchar)h.val[0], (uchar)h.val[1]  \
+    };
+    return v_load(res);
+}
+#endif
 
 // pack boolean 512
 inline v_uint8x64 v_pack_b(const v_uint16x32& a, const v_uint16x32& b)
@@ -3403,6 +3470,7 @@ inline v_uint8x64 v_pack_b(const v_uint32x16& a, const v_uint32x16& b,
     return v_uint8x64(res);
 }
 
+#if CV_SIMD_ELEM64
 inline v_uint8x64 v_pack_b(const v_uint64x8& a, const v_uint64x8& b, const v_uint64x8& c,
                            const v_uint64x8& d, const v_uint64x8& e, const v_uint64x8& f,
                            const v_uint64x8& g, const v_uint64x8& h)
@@ -3428,6 +3496,24 @@ inline v_uint8x64 v_pack_b(const v_uint64x8& a, const v_uint64x8& b, const v_uin
     res = vset_u8m4_u8m1(res, 3, vnsrl_vx_u8m1(v16, 0, 16));
     return v_uint8x64(res);
 }
+#else
+inline v_uint8x64 v_pack_b(const v_uint64x8& a, const v_uint64x8& b, const v_uint64x8& c,
+    const v_uint64x8& d, const v_uint64x8& e, const v_uint64x8& f,
+    const v_uint64x8& g, const v_uint64x8& h)
+{
+    uchar res[64] = { \
+        (uchar)a.val[0], (uchar)a.val[1], (uchar)a.val[2], (uchar)a.val[3], (uchar)a.val[4], (uchar)a.val[5], (uchar)a.val[6], (uchar)a.val[7], \
+        (uchar)b.val[0], (uchar)b.val[1], (uchar)b.val[2], (uchar)b.val[3], (uchar)b.val[4], (uchar)b.val[5], (uchar)b.val[6], (uchar)b.val[7], \
+        (uchar)c.val[0], (uchar)c.val[1], (uchar)c.val[2], (uchar)c.val[3], (uchar)c.val[4], (uchar)c.val[5], (uchar)c.val[6], (uchar)c.val[7], \
+        (uchar)d.val[0], (uchar)d.val[1], (uchar)d.val[2], (uchar)d.val[3], (uchar)d.val[4], (uchar)d.val[5], (uchar)d.val[6], (uchar)d.val[7], \
+        (uchar)e.val[0], (uchar)e.val[1], (uchar)e.val[2], (uchar)e.val[3], (uchar)e.val[4], (uchar)e.val[5], (uchar)e.val[6], (uchar)e.val[7], \
+        (uchar)f.val[0], (uchar)f.val[1], (uchar)f.val[2], (uchar)f.val[3], (uchar)f.val[4], (uchar)f.val[5], (uchar)f.val[6], (uchar)f.val[7], \
+        (uchar)g.val[0], (uchar)g.val[1], (uchar)g.val[2], (uchar)g.val[3], (uchar)g.val[4], (uchar)g.val[5], (uchar)g.val[6], (uchar)g.val[7], \
+        (uchar)h.val[0], (uchar)h.val[1], (uchar)h.val[2], (uchar)h.val[3], (uchar)h.val[4], (uchar)h.val[5], (uchar)h.val[6], (uchar)h.val[7], \
+    };
+    return v512_load(res);
+}
+#endif
 
 //inline v_uint8x16 v_pack_u(const v_int16x8& a, const v_int16x8& b) \
 //{ \
@@ -3476,7 +3562,9 @@ OPENCV_HAL_IMPL_RISCVV_PACK_U(8, 16, 16, 8, unsigned char , 1, 2)
 OPENCV_HAL_IMPL_RISCVV_PACK_U(16, 8, 32, 4, unsigned short, 1, 2)
 
 //512
+#if CV_SIMD_ELEM64
 OPENCV_HAL_IMPL_RISCVV_PACK_U( 8, 64, 16, 32, unsigned char , 4, 8)
+#endif
 OPENCV_HAL_IMPL_RISCVV_PACK_U(16, 32, 32, 16, unsigned short, 4, 8)
 
 #ifdef __GNUC__
