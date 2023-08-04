@@ -2802,6 +2802,7 @@ inline v_uint32x4 v_lut(const unsigned* tab, const int* idx) { return v_reinterp
 inline v_uint32x4 v_lut_pairs(const unsigned* tab, const int* idx) { return v_reinterpret_as_u32(v_lut_pairs((int*)tab, idx)); }
 inline v_uint32x4 v_lut_quads(const unsigned* tab, const int* idx) { return v_reinterpret_as_u32(v_lut_quads((int*)tab, idx)); }
 
+#if CV_SIMD_ELEM64
 inline v_int64x2 v_lut(const int64_t* tab, const int* idx)
 {
     vint64m1_t res = {tab[idx[0]], tab[idx[1]]};
@@ -2821,6 +2822,26 @@ inline v_uint64x2 v_lut_pairs(const uint64_t* tab, const int* idx)
 {
     return v_uint64x2(vle_v_u64m1(tab+idx[0], 2));
 }
+#else
+#define OPENCV_HAL_IMPL_RISCVV_LUT_OP_X64(_Tpvec, _Tp, num, pref) \
+inline _Tpvec pref##_lut(const _Tp* tab, const int* idx) \
+{ \
+    _Tpvec res; \
+    for (int i = 0; i < num; i++) res.val[i] = tab[idx[0]]; \
+    return res; \
+} \
+inline _Tpvec pref##_lut_pairs(const _Tp* tab, const int* idx) \
+{ \
+    _Tpvec res; \
+    for (int i = 0; i < num / 2; i++) {res.val[i] = tab[idx[i]]; res.val[i] = tab[idx[i]]+1;} \
+    return res; \
+} \
+
+OPENCV_HAL_IMPL_RISCVV_LUT_OP_X64(v_int64x2, int64_t, 2,v)
+OPENCV_HAL_IMPL_RISCVV_LUT_OP_X64(v_uint64x2, uint64_t, 2,v)
+OPENCV_HAL_IMPL_RISCVV_LUT_OP_X64(v_float64x2, double, 2,v)
+#endif
+
 
 inline v_float32x4 v_lut(const float* tab, const int* idx)
 {
@@ -2848,6 +2869,8 @@ inline v_float32x4 v_lut_quads(const float* tab, const int* idx)
 {
     return v_float32x4(vle_v_f32m1(tab + idx[0], 4));
 }
+
+#if CV_SIMD_ELEM64
 inline v_float64x2 v_lut(const double* tab, const int* idx)
 {
     vfloat64m1_t res = {tab[idx[0]], tab[idx[1]]};
@@ -2857,6 +2880,7 @@ inline v_float64x2 v_lut_pairs(const double* tab, const int* idx)
 {
     return v_float64x2(vle_v_f64m1(tab+idx[0], 2));
 }
+#endif
 
 inline v_int32x4 v_lut(const int* tab, const v_int32x4& idxvec)
 {
@@ -2893,11 +2917,13 @@ inline v_float32x4 v_lut(const float* tab, const v_int32x4& idxvec)
     };
     return v_float32x4(vle_v_f32m1(elems, 4));
 }
+#if CV_SIMD_ELEM64
 inline v_float64x2 v_lut(const double* tab, const v_int32x4& idxvec)
 {
     vfloat64m1_t res = {tab[idxvec.val[0]], tab[idxvec.val[1]]};
     return v_float64x2(res);
 }
+#endif
 inline void v_lut_deinterleave(const float* tab, const v_int32x4& idxvec, v_float32x4& x, v_float32x4& y)
 {
     vint32m1_t index_x = vmul_vx_i32m1(idxvec.val, 4, 4);
@@ -3077,6 +3103,8 @@ inline v_uint32x16 v512_lut(const unsigned* tab, const int* idx) { return v_rein
 inline v_uint32x16 v512_lut_pairs(const unsigned* tab, const int* idx) { return v_reinterpret_as_u32(v512_lut_pairs((int*)tab, idx)); }
 inline v_uint32x16 v512_lut_quads(const unsigned* tab, const int* idx) { return v_reinterpret_as_u32(v512_lut_quads((int*)tab, idx)); }
 
+#if CV_SIMD_ELEM64
+
 inline v_int64x8 v512_lut(const int64_t* tab, const int* idx)
 {
     int64_t CV_DECL_ALIGNED(32) elems[8] =
@@ -3097,6 +3125,12 @@ inline v_int64x8 v512_lut_pairs(const int64_t* tab, const int* idx)
 }
 inline v_uint64x8 v512_lut(const unsigned long* tab, const int* idx) { return v_reinterpret_as_u64(v512_lut((int64_t*)tab, idx)); }
 inline v_uint64x8 v512_lut_pairs(const unsigned long* tab, const int* idx) { return v_reinterpret_as_u64(v512_lut_pairs((int64_t*)tab, idx)); }
+
+#else
+OPENCV_HAL_IMPL_RISCVV_LUT_OP_X64(v_int64x8, int64_t, 8, v512)
+OPENCV_HAL_IMPL_RISCVV_LUT_OP_X64(v_uint64x8, uint64_t, 8, v512)
+OPENCV_HAL_IMPL_RISCVV_LUT_OP_X64(v_float64x8, double, 8, v512)
+#endif
 
 
 inline v_float32x16 v512_lut(const float* tab, const int* idx)
@@ -3132,6 +3166,8 @@ inline v_float32x16 v512_lut_quads(const float* tab, const int* idx)
     };
     return v_float32x16(vle_v_f32m4(elems, 16));
 }
+#if CV_SIMD_ELEM64
+
 inline v_float64x8 v512_lut(const double* tab, const int* idx)
 {
     double CV_DECL_ALIGNED(32) elems[8] =
@@ -3150,6 +3186,7 @@ inline v_float64x8 v512_lut_pairs(const double* tab, const int* idx)
     };
     return v_float64x8(vle_v_f64m4(elems, 8));
 }
+#endif
 
 inline v_int32x16 v_lut(const int* tab, const v_int32x16& idxvec)
 {
@@ -3186,6 +3223,7 @@ inline v_float32x16 v_lut(const float* tab, const v_int32x16& idxvec)
     };
     return v_float32x16(vle_v_f32m4(elems, 16));
 }
+#if CV_SIMD_ELEM64
 inline v_float64x8 v_lut(const double* tab, const v_int32x16& idxvec)
 {
     vfloat64m4_t res = {tab[idxvec.val[ 0]],tab[idxvec.val[ 1]],
@@ -3194,6 +3232,8 @@ inline v_float64x8 v_lut(const double* tab, const v_int32x16& idxvec)
                         tab[idxvec.val[ 6]],tab[idxvec.val[ 7]]};
     return v_float64x8(res);
 }
+#endif
+
 inline void v_lut_deinterleave(const float* tab, const v_int32x16& idxvec, v_float32x16& x, v_float32x16& y)
 {
     vint32m4_t index_x = vmul_vx_i32m4(idxvec.val, 4, 16);
