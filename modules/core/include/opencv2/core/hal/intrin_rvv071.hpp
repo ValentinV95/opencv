@@ -3916,11 +3916,11 @@ inline void v_load_deinterleave(const _Tp* ptr, v_##_Tpvec##x##num& a, v_##_Tpve
 inline void v_load_deinterleave(const _Tp* ptr, v_##_Tpvec##x##num& a, v_##_Tpvec##x##num& b, v_##_Tpvec##x##num& c) \
 { \
     a.val = (v##_Tpvec##m4_t){0}; b.val = (v##_Tpvec##m4_t){0}; c.val = (v##_Tpvec##m4_t){0}; \
-    v##_Tpvec##m2x3_t ret = intrin##3e_v_##_T##m2x3(ptr, num);\
+    v##_Tpvec##m2x3_t ret = intrin##3e_v_##_T##m2x3(ptr, num/2);\
     a.val = vset_##_T##m4_##_T##m2(a.val, 0, vget_##_T##m2x3_##_T##m2(ret, 0));  \
     b.val = vset_##_T##m4_##_T##m2(b.val, 0, vget_##_T##m2x3_##_T##m2(ret, 1));  \
     c.val = vset_##_T##m4_##_T##m2(c.val, 0, vget_##_T##m2x3_##_T##m2(ret, 2));  \
-    ret = intrin##3e_v_##_T##m2x3(ptr + 3*num, num);\
+    ret = intrin##3e_v_##_T##m2x3(ptr + 3*num/2, num/2);\
     a.val = vset_##_T##m4_##_T##m2(a.val, 1, vget_##_T##m2x3_##_T##m2(ret, 0));  \
     b.val = vset_##_T##m4_##_T##m2(b.val, 1, vget_##_T##m2x3_##_T##m2(ret, 1));  \
     c.val = vset_##_T##m4_##_T##m2(c.val, 1, vget_##_T##m2x3_##_T##m2(ret, 2));  \
@@ -3930,26 +3930,16 @@ inline void v_load_deinterleave(const _Tp* ptr, v_##_Tpvec##x##num& a, v_##_Tpve
 { \
     a.val = (v##_Tpvec##m4_t){0}; b.val = (v##_Tpvec##m4_t){0}; \
     c.val = (v##_Tpvec##m4_t){0}; d.val = (v##_Tpvec##m4_t){0}; \
-    v##_Tpvec##m1x4_t ret = intrin##4e_v_##_T##m1x4(ptr, num);\
-    a.val = vset_##_T##m4_##_T##m1(a.val, 0, vget_##_T##m1x4_##_T##m1(ret, 0));  \
-    b.val = vset_##_T##m4_##_T##m1(b.val, 0, vget_##_T##m1x4_##_T##m1(ret, 1));  \
-    c.val = vset_##_T##m4_##_T##m1(c.val, 0, vget_##_T##m1x4_##_T##m1(ret, 2));  \
-    d.val = vset_##_T##m4_##_T##m1(d.val, 0, vget_##_T##m1x4_##_T##m1(ret, 3));  \
-    ret = intrin##4e_v_##_T##m1x4(ptr + 4*num, num);\
-    a.val = vset_##_T##m4_##_T##m1(a.val, 1, vget_##_T##m1x4_##_T##m1(ret, 0));  \
-    b.val = vset_##_T##m4_##_T##m1(b.val, 1, vget_##_T##m1x4_##_T##m1(ret, 1));  \
-    c.val = vset_##_T##m4_##_T##m1(c.val, 1, vget_##_T##m1x4_##_T##m1(ret, 2));  \
-    d.val = vset_##_T##m4_##_T##m1(d.val, 1, vget_##_T##m1x4_##_T##m1(ret, 3));  \
-    ret = intrin##4e_v_##_T##m1x4(ptr + 8*num, num);\
-    a.val = vset_##_T##m4_##_T##m1(a.val, 2, vget_##_T##m1x4_##_T##m1(ret, 0));  \
-    b.val = vset_##_T##m4_##_T##m1(b.val, 2, vget_##_T##m1x4_##_T##m1(ret, 1));  \
-    c.val = vset_##_T##m4_##_T##m1(c.val, 2, vget_##_T##m1x4_##_T##m1(ret, 2));  \
-    d.val = vset_##_T##m4_##_T##m1(d.val, 2, vget_##_T##m1x4_##_T##m1(ret, 3));  \
-    ret = intrin##4e_v_##_T##m1x4(ptr + 12*num, num);\
-    a.val = vset_##_T##m4_##_T##m1(a.val, 3, vget_##_T##m1x4_##_T##m1(ret, 0));  \
-    b.val = vset_##_T##m4_##_T##m1(b.val, 3, vget_##_T##m1x4_##_T##m1(ret, 1));  \
-    c.val = vset_##_T##m4_##_T##m1(c.val, 3, vget_##_T##m1x4_##_T##m1(ret, 2));  \
-    d.val = vset_##_T##m4_##_T##m1(d.val, 3, vget_##_T##m1x4_##_T##m1(ret, 3));  \
+    v##_Tpvec##m2x4_t ret = intrin##4e_v_##_T##m2x4(ptr, num/2);\
+    a.val = vset_##_T##m4_##_T##m2(a.val, 0, vget_##_T##m2x4_##_T##m2(ret, 0));  \
+    b.val = vset_##_T##m4_##_T##m2(b.val, 0, vget_##_T##m2x4_##_T##m2(ret, 1));  \
+    c.val = vset_##_T##m4_##_T##m2(c.val, 0, vget_##_T##m2x4_##_T##m2(ret, 2));  \
+    d.val = vset_##_T##m4_##_T##m2(d.val, 0, vget_##_T##m2x4_##_T##m2(ret, 3));  \
+    ret = intrin##4e_v_##_T##m2x4(ptr + 2*num, num/2);\
+    a.val = vset_##_T##m4_##_T##m2(a.val, 1, vget_##_T##m2x4_##_T##m2(ret, 0));  \
+    b.val = vset_##_T##m4_##_T##m2(b.val, 1, vget_##_T##m2x4_##_T##m2(ret, 1));  \
+    c.val = vset_##_T##m4_##_T##m2(c.val, 1, vget_##_T##m2x4_##_T##m2(ret, 2));  \
+    d.val = vset_##_T##m4_##_T##m2(d.val, 1, vget_##_T##m2x4_##_T##m2(ret, 3));  \
 } \
 
 #define OPENCV_HAL_IMPL_RISCVV_STORE_INTERLEAVED_512(intrin, _Tpvec, num, _Tp, _T)    \
@@ -3968,37 +3958,27 @@ inline void v_store_interleave( _Tp* ptr, const v_##_Tpvec##x##num& a, const v_#
     ret = vset_##_T##m2x3(ret, 0, vget_##_T##m4_##_T##m2(a.val, 0));  \
     ret = vset_##_T##m2x3(ret, 1, vget_##_T##m4_##_T##m2(b.val, 0));  \
     ret = vset_##_T##m2x3(ret, 2, vget_##_T##m4_##_T##m2(c.val, 0));  \
-    intrin##3e_v_##_T##m2x3(ptr, ret, num); \
+    intrin##3e_v_##_T##m2x3(ptr, ret, num/2); \
     ret = vset_##_T##m2x3(ret, 0, vget_##_T##m4_##_T##m2(a.val, 1));  \
     ret = vset_##_T##m2x3(ret, 1, vget_##_T##m4_##_T##m2(b.val, 1));  \
     ret = vset_##_T##m2x3(ret, 2, vget_##_T##m4_##_T##m2(c.val, 1));  \
-    intrin##3e_v_##_T##m2x3(ptr + 3*num, ret, num); \
+    intrin##3e_v_##_T##m2x3(ptr + 3*num/2, ret, num/2); \
 } \
 inline void v_store_interleave( _Tp* ptr, const v_##_Tpvec##x##num& a, const v_##_Tpvec##x##num& b, \
                                 const v_##_Tpvec##x##num& c, const v_##_Tpvec##x##num& d, \
                                 hal::StoreMode /*mode*/=hal::STORE_UNALIGNED ) \
 { \
-    v##_Tpvec##m1x4_t ret = vundefined_##_T##m1x4();             \
-    ret = vset_##_T##m1x4(ret, 0, vget_##_T##m4_##_T##m1(a.val, 0));  \
-    ret = vset_##_T##m1x4(ret, 1, vget_##_T##m4_##_T##m1(b.val, 0));  \
-    ret = vset_##_T##m1x4(ret, 2, vget_##_T##m4_##_T##m1(c.val, 0));  \
-    ret = vset_##_T##m1x4(ret, 3, vget_##_T##m4_##_T##m1(d.val, 0));  \
-    intrin##4e_v_##_T##m1x4(ptr, ret, num); \
-    ret = vset_##_T##m1x4(ret, 0, vget_##_T##m4_##_T##m1(a.val, 1));  \
-    ret = vset_##_T##m1x4(ret, 1, vget_##_T##m4_##_T##m1(b.val, 1));  \
-    ret = vset_##_T##m1x4(ret, 2, vget_##_T##m4_##_T##m1(c.val, 1));  \
-    ret = vset_##_T##m1x4(ret, 3, vget_##_T##m4_##_T##m1(d.val, 1));  \
-    intrin##4e_v_##_T##m1x4(ptr + 4*num, ret, num); \
-    ret = vset_##_T##m1x4(ret, 0, vget_##_T##m4_##_T##m1(a.val, 2));  \
-    ret = vset_##_T##m1x4(ret, 1, vget_##_T##m4_##_T##m1(b.val, 2));  \
-    ret = vset_##_T##m1x4(ret, 2, vget_##_T##m4_##_T##m1(c.val, 2));  \
-    ret = vset_##_T##m1x4(ret, 3, vget_##_T##m4_##_T##m1(d.val, 2));  \
-    intrin##4e_v_##_T##m1x4(ptr + 8*num, ret, num); \
-    ret = vset_##_T##m1x4(ret, 0, vget_##_T##m4_##_T##m1(a.val, 3));  \
-    ret = vset_##_T##m1x4(ret, 1, vget_##_T##m4_##_T##m1(b.val, 3));  \
-    ret = vset_##_T##m1x4(ret, 2, vget_##_T##m4_##_T##m1(c.val, 3));  \
-    ret = vset_##_T##m1x4(ret, 3, vget_##_T##m4_##_T##m1(d.val, 3));  \
-    intrin##4e_v_##_T##m1x4(ptr + 12*num, ret, num); \
+    v##_Tpvec##m2x4_t ret = vundefined_##_T##m2x4();             \
+    ret = vset_##_T##m2x4(ret, 0, vget_##_T##m4_##_T##m2(a.val, 0));  \
+    ret = vset_##_T##m2x4(ret, 1, vget_##_T##m4_##_T##m2(b.val, 0));  \
+    ret = vset_##_T##m2x4(ret, 2, vget_##_T##m4_##_T##m2(c.val, 0));  \
+    ret = vset_##_T##m2x4(ret, 3, vget_##_T##m4_##_T##m2(d.val, 0));  \
+    intrin##4e_v_##_T##m2x4(ptr, ret, num/2); \
+    ret = vset_##_T##m2x4(ret, 0, vget_##_T##m4_##_T##m2(a.val, 1));  \
+    ret = vset_##_T##m2x4(ret, 1, vget_##_T##m4_##_T##m2(b.val, 1));  \
+    ret = vset_##_T##m2x4(ret, 2, vget_##_T##m4_##_T##m2(c.val, 1));  \
+    ret = vset_##_T##m2x4(ret, 3, vget_##_T##m4_##_T##m2(d.val, 1));  \
+    intrin##4e_v_##_T##m1x4(ptr + 2*num, ret, num/2); \
 }
 
 #define OPENCV_HAL_IMPL_RISCVV_INTERLEAVED_512(_Tpvec, _Tp, num, ld, st, _T) \
