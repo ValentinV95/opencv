@@ -1054,10 +1054,10 @@ inline v_int32x16 v_dotprod(const v_int16x32& a, const v_int16x32& b)
     //vset_i32m4_i32m2(res2, 1, vget_i32m4_i32m2(res, 1));
     //return v_int32x16(vadd_vv_i32m4(res1, res2, 16));
     vint32m8_t res = vundefined_i32m8();
-    res = vwmul_vv_i32m8(a.val, b.val, 16);
+    res = vwmul_vv_i32m8(a.val, b.val, 32);
     res = vrgather_vv_i32m8(res, (vuint32m8_t){0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 
                                                1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31}, 32);
-    return v_int32x16(vadd_vv_i32m4(vget_i32m8_i32m4(res, 0), vget_i32m8_i32m4(res, 1), 32));
+    return v_int32x16(vadd_vv_i32m4(vget_i32m8_i32m4(res, 0), vget_i32m8_i32m4(res, 1), 16));
     
 }
 
