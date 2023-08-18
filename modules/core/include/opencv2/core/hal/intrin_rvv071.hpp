@@ -1544,7 +1544,7 @@ inline int64 v_reduce_sum(const v_int64x8& a)
 inline scalartype v_reduce_##func(const v_##_Tpvec##x##num& a) \
 {\
     v##_Tpvec##m1_t val = (v##_Tpvec##m1_t)vmv_v_x_i8m1(0, 16); \
-    val = v##funcu##_vs_##_Tpvec2##m##regnum##_##_Tpvec2##m1(val, a.val, val, num);    \
+    val = v##funcu##_vs_##_Tpvec2##m##regnum##_##_Tpvec2##m1(val, a.val, a.val, num);    \
     return val[0];    \
 }
 
