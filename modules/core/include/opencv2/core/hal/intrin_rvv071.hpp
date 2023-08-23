@@ -3126,25 +3126,25 @@ inline int v_signmask(const v_uint16x32& a)
 inline int v_signmask(const v_int32x16& a)
 {
     int res =  v_signmask(v_int32x4(vget_i32m4_i32m1(a.val, 0)));
-    res |= int(v_signmask(v_int32x4(vget_i32m4_i32m1(a.val, 1))))<<8;
-    res |= int(v_signmask(v_int32x4(vget_i32m4_i32m1(a.val, 2))))<<16;
-    res |= int(v_signmask(v_int32x4(vget_i32m4_i32m1(a.val, 3))))<<24;
+    res |= int(v_signmask(v_int32x4(vget_i32m4_i32m1(a.val, 1))))<<4;
+    res |= int(v_signmask(v_int32x4(vget_i32m4_i32m1(a.val, 2))))<<8;
+    res |= int(v_signmask(v_int32x4(vget_i32m4_i32m1(a.val, 3))))<<12;
     return res;
 }
 inline int v_signmask(const v_uint32x16& a)
 {
     int res =  v_signmask(v_uint32x4(vget_u32m4_u32m1(a.val, 0)));
-    res |= int(v_signmask(v_uint32x4(vget_u32m4_u32m1(a.val, 1))))<<8;
-    res |= int(v_signmask(v_uint32x4(vget_u32m4_u32m1(a.val, 2))))<<16;
-    res |= int(v_signmask(v_uint32x4(vget_u32m4_u32m1(a.val, 3))))<<24;
+    res |= int(v_signmask(v_uint32x4(vget_u32m4_u32m1(a.val, 1))))<<4;
+    res |= int(v_signmask(v_uint32x4(vget_u32m4_u32m1(a.val, 2))))<<8;
+    res |= int(v_signmask(v_uint32x4(vget_u32m4_u32m1(a.val, 3))))<<12;
     return res;
 }
 inline int v_signmask(const v_uint64x8& a)
 {
     int res =  v_signmask(v_uint64x2(vget_u64m4_u64m1(a.val, 0)));
-    res |= int(v_signmask(v_uint64x2(vget_u64m4_u64m1(a.val, 1))))<<8;
-    res |= int(v_signmask(v_uint64x2(vget_u64m4_u64m1(a.val, 2))))<<16;
-    res |= int(v_signmask(v_uint64x2(vget_u64m4_u64m1(a.val, 3))))<<24;
+    res |= int(v_signmask(v_uint64x2(vget_u64m4_u64m1(a.val, 1))))<<2;
+    res |= int(v_signmask(v_uint64x2(vget_u64m4_u64m1(a.val, 2))))<<4;
+    res |= int(v_signmask(v_uint64x2(vget_u64m4_u64m1(a.val, 3))))<<6;
     return res;
 }
 inline int v_signmask(const v_int64x8& a)
